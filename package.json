@@ -1,0 +1,14 @@
+{
+  "name": "monarkle",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "household": "npm run start --workspace apps/household"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.50.0"
+  }
+}

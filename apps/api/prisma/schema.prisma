@@ -1,0 +1,173 @@
+// MONARKLE unified backend schema.
+// Local dev uses SQLite (zero setup). To move to Postgres for production:
+//   1. Change `provider = "sqlite"` to `provider = "postgresql"` below.
+//   2. Point DATABASE_URL (.env) at a real Postgres connection string.
+//   3. Run `npm run db:migrate` again.
+// No field types below depend on SQLite-only features (enums are modeled as
+// plain strings, validated at the API layer with zod) so this schema is
+// Postgres-compatible as-is.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// role: HOUSEHOLD | PSP | COLLECTOR | ADMIN | RECYCLER | CORPORATE
+// status: ACTIVE | SUSPENDED | PENDING
+model User {
+  id            String   @id @default(cuid())
+  role          String
+  fullName      String
+  phone         String?  @unique
+  email         String?  @unique
+  passwordHash  String
+  avatarInitials String
+  accountType   String?  // Household | Business | Estate | School | Market (household users only)
+  city          String?
+  referralCode  String?  @unique
+  referredBy    String?
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet          Wallet?
+  bankAccounts    BankAccount[]
+  rewardEntries   RewardEntry[]
+  pspProfile      PspProfile?
+  collectorProfile CollectorProfile?
+
+  pickupsAsHousehold Pickup[] @relation("HouseholdPickups")
+  pickupsAsPsp       Pickup[] @relation("PspPickups")
+  pickupsAsCollector Pickup[] @relation("CollectorPickups")
+  payouts            Payout[]
+  routes             Route[]
+}
+
+model Wallet {
+  id      String @id @default(cuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance Float  @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model BankAccount {
+  id            String  @id @default(cuid())
+  userId        String
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankName      String
+  accountNumber String
+  accountName   String
+  isDefault     Boolean @default(true)
+  createdAt     DateTime @default(now())
+
+  payouts Payout[]
+}
+
+// intent: DISPOSE | SELL | DROPOFF
+// category: Plastic | Paper | Metal | Glass | Organic | E-waste
+// quantity: Small | Medium | Large
+// status: PENDING | ASSIGNED | IN_PROGRESS | COMPLETED | CANCELLED
+model Pickup {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  householdId   String
+  household     User     @relation("HouseholdPickups", fields: [householdId], references: [id])
+  intent        String
+  category      String
+  quantity      String
+  weightKg      Float?
+  address       String
+  city          String   @default("Lagos")
+  scheduledDate String
+  scheduledTime String
+  status        String   @default("PENDING")
+  serviceFee    Float    @default(0)
+  netPayout     Float?
+  recyclerName  String?
+  qrCode        String?
+
+  pspId       String?
+  psp         User?   @relation("PspPickups", fields: [pspId], references: [id])
+  collectorId String?
+  collector   User?   @relation("CollectorPickups", fields: [collectorId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  payouts Payout[]
+  stops   Stop[]
+}
+
+// status: PENDING | PAID | FAILED
+model Payout {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  pickupId      String?
+  pickup        Pickup?  @relation(fields: [pickupId], references: [id])
+  bankAccountId String?
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id])
+  amount        Float
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+}
+
+model RewardEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  label     String
+  points    Int
+  createdAt DateTime @default(now())
+}
+
+model PspProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType String
+  plateNumber String
+  rating      Float   @default(5)
+  totalJobs   Int     @default(0)
+  verified    Boolean @default(false)
+}
+
+model CollectorProfile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType   String
+  plateNumber   String
+  licenseNumber String
+  totalRoutes   Int     @default(0)
+  verified      Boolean @default(false)
+}
+
+// status: NOT_STARTED | IN_PROGRESS | COMPLETED
+model Route {
+  id          String   @id @default(cuid())
+  collectorId String
+  collector   User     @relation(fields: [collectorId], references: [id])
+  date        String
+  status      String   @default("NOT_STARTED")
+  createdAt   DateTime @default(now())
+
+  stops Stop[]
+}
+
+// status: PENDING | EN_ROUTE | ARRIVED | COMPLETED | SKIPPED
+model Stop {
+  id       String @id @default(cuid())
+  routeId  String
+  route    Route  @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  pickupId String
+  pickup   Pickup @relation(fields: [pickupId], references: [id])
+  sequence Int
+  status   String @default("PENDING")
+  weightKg Float?
+}

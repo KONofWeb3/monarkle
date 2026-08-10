@@ -7,6 +7,7 @@ import { AppError, asyncHandler } from '../lib/errors.js';
 import { generateReferralCode } from '../lib/codes.js';
 import { requireAuth } from '../middleware/auth.js';
 import { serializeUser } from '../lib/serialize.js';
+import { sendOtp, verifyOtp } from '../lib/sms.js';
 
 export const authRouter = Router();
 
@@ -89,21 +90,25 @@ authRouter.post(
   })
 );
 
-// Mock OTP flow — no real SMS provider wired up. Any 4-6 digit code is accepted
-// so the frontend flows built around OTP screens work end-to-end.
+// OTP flow — sends via Termii when TERMII_API_KEY is set; otherwise logs the
+// code to the server console so local testing keeps working without a live
+// SMS account. Either way the code is real and must match to verify.
 authRouter.post(
   '/otp/send',
   asyncHandler(async (req, res) => {
     const { phone } = z.object({ phone: z.string().min(7) }).parse(req.body);
-    res.json({ sent: true, phone, hint: 'Mock OTP — enter any 4-6 digit code' });
+    const { sent, mock } = await sendOtp(phone);
+    res.json({ sent, phone, mock, hint: mock ? 'Mock mode — check server logs for the code' : undefined });
   })
 );
 
 authRouter.post(
   '/otp/verify',
   asyncHandler(async (req, res) => {
-    const { code } = z.object({ phone: z.string().min(7), code: z.string() }).parse(req.body);
+    const { phone, code } = z.object({ phone: z.string().min(7), code: z.string() }).parse(req.body);
     if (!/^\d{4,6}$/.test(code)) throw new AppError(400, 'Invalid code format');
+    const ok = verifyOtp(phone, code);
+    if (!ok) throw new AppError(400, 'Incorrect or expired code');
     res.json({ verified: true });
   })
 );

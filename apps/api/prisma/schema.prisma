@@ -1,18 +1,14 @@
-// MONARKLE unified backend schema.
-// Local dev uses SQLite (zero setup). To move to Postgres for production:
-//   1. Change `provider = "sqlite"` to `provider = "postgresql"` below.
-//   2. Point DATABASE_URL (.env) at a real Postgres connection string.
-//   3. Run `npm run db:migrate` again.
-// No field types below depend on SQLite-only features (enums are modeled as
-// plain strings, validated at the API layer with zod) so this schema is
-// Postgres-compatible as-is.
+// MONARKLE unified backend schema. Running on Neon (Postgres) — see .env
+// for the connection string. Enums are modeled as plain strings validated
+// at the API layer with zod (kept from the original SQLite-compatible
+// design; no functional reason to change now that we're on Postgres).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

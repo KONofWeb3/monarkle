@@ -62,7 +62,10 @@
       "Bash(curl -s -X POST http://localhost:4000/auth/otp/send -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348011112222\"}')",
       "Bash(curl -s -X POST http://localhost:4000/auth/otp/verify -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348011112222\",\"code\":\"0000\"}')",
       "Bash(curl -s -X POST http://localhost:4000/auth/otp/send -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348055556666\"}')",
-      "Bash(curl -s -X POST http://localhost:4000/auth/otp/verify -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348055556666\",\"code\":\"8097\"}')"
+      "Bash(curl -s -X POST http://localhost:4000/auth/otp/verify -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348055556666\",\"code\":\"8097\"}')",
+      "Bash(rm -rf \"C:\\\\Users\\\\DELL\\\\Documents\\\\monarkle\\\\apps\\\\api\\\\prisma\\\\migrations\")",
+      "Bash(rm -f \"C:\\\\Users\\\\DELL\\\\Documents\\\\monarkle\\\\apps\\\\api\\\\prisma\\\\dev.db\")",
+      "Bash(tasklist)"
     ]
   }
 }

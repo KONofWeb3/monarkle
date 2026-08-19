@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,40 +10,56 @@ import Timeline from '../../components/Timeline';
 import { colors, radius, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
 import { useAppState } from '../../data/AppContext';
-import { JobStatus } from '../../data/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ActiveJob'>;
 
-const stepLabels: { key: JobStatus; label: string }[] = [
-  { key: 'accepted', label: 'Job accepted' },
-  { key: 'enRoute', label: 'On the way' },
-  { key: 'arrived', label: 'Arrived at pickup' },
-];
-
-const nextActionLabel: Record<JobStatus, string> = {
-  available: 'Accept job', accepted: "I'm on my way", enRoute: "I've arrived",
-  arrived: 'Start verification', completed: 'Completed', declined: 'Declined', cancelled: 'Cancelled',
-};
-
 export default function ActiveJobScreen({ navigation }: Props) {
   const { activeJob, advanceActiveJob } = useAppState();
+  // The backend only distinguishes accepted/en-route/completed — "arrived" is
+  // a client-only sub-state of en-route (gates the "start verification" step)
+  // rather than something that round-trips through the API.
+  const [arrived, setArrived] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeJob) navigation.replace('HomeMain');
+  }, [activeJob, navigation]);
+
   if (!activeJob) {
-    navigation.replace('HomeMain');
     return null;
   }
 
-  const steps = stepLabels.map((s, i) => {
-    const order = stepLabels.map((x) => x.key);
-    const currentIdx = order.indexOf(activeJob.status);
-    return { label: s.label, state: (i <= currentIdx ? 'done' : 'pending') as 'done' | 'pending' };
-  });
+  const steps = [
+    { label: 'Job accepted', state: 'done' as const },
+    { label: 'On the way', state: (activeJob.status === 'enRoute' || arrived ? 'done' : 'pending') as 'done' | 'pending' },
+    { label: 'Arrived at pickup', state: (arrived ? 'done' : 'pending') as 'done' | 'pending' },
+  ];
 
-  const onPrimary = () => {
-    if (activeJob.status === 'arrived') {
-      navigation.navigate('VerifyPickup');
-    } else {
-      advanceActiveJob();
+  const primaryLabel = activeJob.status === 'accepted'
+    ? "I'm on my way"
+    : arrived
+      ? 'Start verification'
+      : "I've arrived";
+
+  const onPrimary = async () => {
+    if (activeJob.status === 'accepted') {
+      setBusy(true);
+      setError(null);
+      try {
+        await advanceActiveJob();
+      } catch (e: any) {
+        setError(e.message ?? 'Could not update job status');
+      } finally {
+        setBusy(false);
+      }
+      return;
     }
+    if (!arrived) {
+      setArrived(true);
+      return;
+    }
+    navigation.navigate('VerifyPickup');
   };
 
   return (
@@ -69,7 +85,8 @@ export default function ActiveJobScreen({ navigation }: Props) {
         <Timeline steps={steps} />
       </View>
 
-      <Button label={nextActionLabel[activeJob.status]} onPress={onPrimary} style={{ marginTop: spacing.lg, marginBottom: spacing.xl }} />
+      {error && <Text style={styles.error}>{error}</Text>}
+      <Button label={primaryLabel} loading={busy} onPress={onPrimary} style={{ marginTop: spacing.lg, marginBottom: spacing.xl }} />
     </ScreenContainer>
   );
 }
@@ -81,4 +98,5 @@ const styles = StyleSheet.create({
   address: { ...typography.body, color: colors.textBody, marginTop: 2 },
   contactRow: { flexDirection: 'row', marginTop: spacing.lg },
   sectionTitle: { ...typography.h4, color: colors.textPrimary, marginBottom: spacing.sm },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.lg },
 });

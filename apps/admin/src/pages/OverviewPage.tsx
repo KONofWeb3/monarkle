@@ -6,7 +6,6 @@ import {
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import type { StatusKind } from '../components/StatusBadge';
-import { kpis, monthlyTrend, cityBreakdown } from '../data/mockData';
 import { useAppState } from '../data/AppContext';
 import type { PickupStatus } from '../data/types';
 
@@ -21,7 +20,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function OverviewPage() {
-  const { pickups } = useAppState();
+  const { pickups, kpis, monthlyTrend, cityBreakdown } = useAppState();
   const recent = pickups.slice(0, 5);
 
   return (
@@ -33,7 +32,7 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
-          <StatCard key={k.label} label={k.label} value={k.value} change={k.change} trend={k.trend} icon={iconMap[k.icon as keyof typeof iconMap]} />
+          <StatCard key={k.label} label={k.label} value={k.value} icon={iconMap[k.icon]} />
         ))}
       </div>
 

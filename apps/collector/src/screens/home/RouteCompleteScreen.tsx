@@ -13,6 +13,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'RouteComplete'>;
 
 export default function RouteCompleteScreen({ navigation }: Props) {
   const { route } = useAppState();
+  if (!route) return null;
   const completed = route.stops.filter((s) => s.status === 'completed');
   const totalWeight = completed.reduce((sum, s) => sum + (s.weightKg ?? 0), 0);
 

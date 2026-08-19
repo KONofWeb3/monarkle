@@ -26,7 +26,7 @@ export type RouteSummary = {
   stopsCompleted: number;
   totalStops: number;
   totalWeightKg: number;
-  durationMins: number;
+  durationMins: number | null;
 };
 
 export type CollectorProfile = {

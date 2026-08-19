@@ -8,9 +8,17 @@ import { colors, spacing, typography } from '../../theme';
 import { useAppState } from '../../data/AppContext';
 
 export default function LoginScreen() {
-  const { signIn } = useAppState();
+  const { signIn, busy, authError, clearAuthError } = useAppState();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+
+  const onLogin = async () => {
+    try {
+      await signIn(phone, password);
+    } catch {
+      // authError already set by context
+    }
+  };
 
   return (
     <ScreenContainer scroll>
@@ -25,10 +33,23 @@ export default function LoginScreen() {
       <Text style={styles.title}>Welcome back</Text>
       <Text style={styles.subtitle}>Log in to see today&apos;s route</Text>
 
-      <Input label="Phone Number" placeholder="Enter your phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-      <Input label="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secure />
+      <Input
+        label="Phone Number"
+        placeholder="Enter your phone number"
+        value={phone}
+        onChangeText={(v) => { setPhone(v); clearAuthError(); }}
+        keyboardType="phone-pad"
+      />
+      <Input
+        label="Password"
+        placeholder="Enter your password"
+        value={password}
+        onChangeText={(v) => { setPassword(v); clearAuthError(); }}
+        secure
+      />
+      {authError && <Text style={styles.error}>{authError}</Text>}
 
-      <Button label="Log In" onPress={() => signIn()} style={{ marginTop: spacing.md }} />
+      <Button label="Log In" loading={busy} disabled={!phone || !password} onPress={onLogin} style={{ marginTop: spacing.md }} />
 
       <Text style={styles.footerText}>Not registered as a collector? Contact MONARKLE Ops.</Text>
     </ScreenContainer>
@@ -42,5 +63,6 @@ const styles = StyleSheet.create({
   tagline: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   title: { ...typography.h2, color: colors.textPrimary, marginBottom: spacing.xs },
   subtitle: { ...typography.body, color: colors.textBody, marginBottom: spacing.xl },
+  error: { ...typography.caption, color: colors.danger, marginBottom: spacing.md },
   footerText: { ...typography.caption, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
 });

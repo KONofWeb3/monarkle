@@ -146,12 +146,14 @@ model CollectorProfile {
 
 // status: NOT_STARTED | IN_PROGRESS | COMPLETED
 model Route {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   collectorId String
-  collector   User     @relation(fields: [collectorId], references: [id])
+  collector   User      @relation(fields: [collectorId], references: [id])
   date        String
-  status      String   @default("NOT_STARTED")
-  createdAt   DateTime @default(now())
+  status      String    @default("NOT_STARTED")
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
   stops Stop[]
 }

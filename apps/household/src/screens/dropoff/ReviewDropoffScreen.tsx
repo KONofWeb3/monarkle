@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +20,20 @@ const steps = [
 
 export default function ReviewDropoffScreen({ navigation }: Props) {
   const { pickupDraft, submitPickupDraft } = useAppState();
+  const [loading, setLoading] = useState(false);
   const estPayout = pickupDraft?.quantity === 'Large' ? 5200 : pickupDraft?.quantity === 'Small' ? 900 : 2640;
+
+  const onGenerate = async () => {
+    setLoading(true);
+    try {
+      const pickup = await submitPickupDraft();
+      navigation.navigate('DropoffQRCode', { pickupId: pickup.id });
+    } catch {
+      // Button stays enabled so the user can just retry.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScreenContainer scroll>
@@ -59,10 +72,8 @@ export default function ReviewDropoffScreen({ navigation }: Props) {
 
       <Button
         label="Generate my QR code"
-        onPress={() => {
-          const pickup = submitPickupDraft();
-          navigation.navigate('DropoffQRCode', { pickupId: pickup.id });
-        }}
+        loading={loading}
+        onPress={onGenerate}
         style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}
       />
     </ScreenContainer>

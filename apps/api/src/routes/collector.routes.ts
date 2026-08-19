@@ -30,21 +30,25 @@ collectorRouter.get(
 collectorRouter.post(
   '/route/start',
   asyncHandler(async (req, res) => {
+    const stopsInclude = {
+      orderBy: { sequence: 'asc' as const },
+      include: { pickup: { include: { household: { select: { fullName: true } } } } },
+    };
     const route = await prisma.route.findFirst({
       where: { collectorId: req.user!.userId, date: todayStr() },
-      include: { stops: { orderBy: { sequence: 'asc' } } },
+      include: { stops: stopsInclude },
     });
     if (!route) throw new AppError(404, 'No route scheduled for today');
     if (route.status !== 'NOT_STARTED') return res.json({ route });
 
     const first = route.stops[0];
     await prisma.$transaction([
-      prisma.route.update({ where: { id: route.id }, data: { status: 'IN_PROGRESS' } }),
+      prisma.route.update({ where: { id: route.id }, data: { status: 'IN_PROGRESS', startedAt: new Date() } }),
       ...(first ? [prisma.stop.update({ where: { id: first.id }, data: { status: 'EN_ROUTE' } })] : []),
     ]);
     const updated = await prisma.route.findUnique({
       where: { id: route.id },
-      include: { stops: { orderBy: { sequence: 'asc' } } },
+      include: { stops: stopsInclude },
     });
     res.json({ route: updated });
   })
@@ -61,7 +65,11 @@ collectorRouter.post(
       include: { route: true },
     });
     if (!stop || stop.route.collectorId !== req.user!.userId) throw new AppError(404, 'Stop not found');
-    const updated = await prisma.stop.update({ where: { id: stop.id }, data: { status } });
+    const updated = await prisma.stop.update({
+      where: { id: stop.id },
+      data: { status },
+      include: { pickup: { include: { household: { select: { fullName: true } } } } },
+    });
     res.json({ stop: updated });
   })
 );
@@ -90,7 +98,7 @@ collectorRouter.post(
     if (nextStop) {
       await prisma.stop.update({ where: { id: nextStop.id }, data: { status: 'EN_ROUTE' } });
     } else {
-      await prisma.route.update({ where: { id: stop.route.id }, data: { status: 'COMPLETED' } });
+      await prisma.route.update({ where: { id: stop.route.id }, data: { status: 'COMPLETED', completedAt: new Date() } });
       await prisma.collectorProfile.updateMany({
         where: { userId: req.user!.userId },
         data: { totalRoutes: { increment: 1 } },
@@ -116,6 +124,9 @@ collectorRouter.get(
       stopsCompleted: r.stops.filter((s) => s.status === 'COMPLETED').length,
       totalStops: r.stops.length,
       totalWeightKg: r.stops.reduce((sum, s) => sum + (s.weightKg ?? 0), 0),
+      durationMins: r.startedAt && r.completedAt
+        ? Math.round((r.completedAt.getTime() - r.startedAt.getTime()) / 60000)
+        : null,
     }));
     res.json({ routes: summaries });
   })

@@ -103,7 +103,7 @@ export default function PickupDetailView({ pickup, onBack }: { pickup: Pickup; o
       )}
 
       {isCancellable && (
-        <Pressable style={styles.cancelRow} onPress={() => cancelPickup(pickup.id)}>
+        <Pressable style={styles.cancelRow} onPress={() => cancelPickup(pickup.id).catch(() => {})}>
           <Text style={styles.cancelText}>Cancel pickup</Text>
         </Pressable>
       )}

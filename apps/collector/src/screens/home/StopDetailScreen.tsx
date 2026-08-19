@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,11 +13,25 @@ import { useAppState } from '../../data/AppContext';
 type Props = NativeStackScreenProps<HomeStackParamList, 'StopDetail'>;
 
 export default function StopDetailScreen({ navigation, route: navRoute }: Props) {
-  const { route, setStopStatus } = useAppState();
-  const stop = route.stops.find((s) => s.id === navRoute.params.stopId);
-  if (!stop) return null;
+  const { route, markArrived } = useAppState();
+  const stop = route?.stops.find((s) => s.id === navRoute.params.stopId);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!route || !stop) return null;
 
   const isEnRoute = stop.status === 'enRoute';
+
+  const onArrived = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await markArrived(stop.id);
+    } catch (e: any) {
+      setError(e.message ?? 'Could not update this stop');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <ScreenContainer scroll>
@@ -36,10 +50,13 @@ export default function StopDetailScreen({ navigation, route: navRoute }: Props)
         <View style={styles.row}><Text style={styles.rowLabel}>Pickup code</Text><Text style={styles.rowValue}>{stop.code}</Text></View>
       </Card>
 
+      {error && <Text style={styles.error}>{error}</Text>}
+
       {isEnRoute ? (
         <Button
           label="I've arrived"
-          onPress={() => setStopStatus(stop.id, 'arrived')}
+          loading={busy}
+          onPress={onArrived}
           style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}
         />
       ) : (
@@ -59,4 +76,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
   rowLabel: { ...typography.caption, color: colors.textSecondary },
   rowValue: { ...typography.captionMedium, color: colors.textPrimary },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.md },
 });

@@ -17,11 +17,18 @@ export default function SetupProfileScreen({ navigation }: Props) {
   const { updateUser } = useAppState();
   const [fullName, setFullName] = useState('');
   const [accountType, setAccountType] = useState<User['accountType']>('Household');
+  const [loading, setLoading] = useState(false);
 
-  const onContinue = () => {
-    if (fullName) updateUser({ fullName, accountType });
-    else updateUser({ accountType });
-    navigation.navigate('EnableLocation');
+  const onContinue = async () => {
+    setLoading(true);
+    try {
+      await updateUser(fullName ? { fullName, accountType } : { accountType });
+    } catch {
+      // Non-fatal — profile can be edited later from the Profile tab.
+    } finally {
+      setLoading(false);
+      navigation.navigate('EnableLocation');
+    }
   };
 
   return (
@@ -45,7 +52,7 @@ export default function SetupProfileScreen({ navigation }: Props) {
         })}
       </View>
 
-      <Button label="Continue" onPress={onContinue} style={{ marginTop: spacing.xxxl }} />
+      <Button label="Continue" loading={loading} onPress={onContinue} style={{ marginTop: spacing.xxxl }} />
     </ScreenContainer>
   );
 }

@@ -11,14 +11,16 @@ import { useAppState } from '../../data/AppContext';
 type Props = NativeStackScreenProps<HomeStackParamList, 'StopComplete'>;
 
 export default function StopCompleteScreen({ navigation, route: navRoute }: Props) {
-  const { route, goToNextStop } = useAppState();
-  const stop = route.stops.find((s) => s.id === navRoute.params.stopId);
-  if (!stop) return null;
+  const { route } = useAppState();
+  const stop = route?.stops.find((s) => s.id === navRoute.params.stopId);
+  if (!route || !stop) return null;
 
+  // completeStop() already refetched the route, so this reflects the
+  // server's own next-stop advancement (or route completion) — no local
+  // progression logic to keep in sync here.
   const nextStop = route.stops.find((s) => s.sequence === stop.sequence + 1);
 
   const onContinue = () => {
-    goToNextStop();
     if (nextStop) navigation.replace('StopDetail', { stopId: nextStop.id });
     else navigation.replace('RouteComplete');
   };

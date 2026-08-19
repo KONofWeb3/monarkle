@@ -17,7 +17,7 @@ const steps: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string
 ];
 
 export default function AllSetScreen({}: Props) {
-  const { signIn } = useAppState();
+  const { finishSignup } = useAppState();
 
   return (
     <ScreenContainer>
@@ -44,7 +44,7 @@ export default function AllSetScreen({}: Props) {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Go to my dashboard" onPress={() => signIn()} />
+        <Button label="Go to my dashboard" onPress={finishSignup} />
       </View>
     </ScreenContainer>
   );

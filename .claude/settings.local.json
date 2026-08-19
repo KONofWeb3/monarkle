@@ -65,7 +65,25 @@
       "Bash(curl -s -X POST http://localhost:4000/auth/otp/verify -H \"Content-Type: application/json\" -d '{\"phone\":\"+2348055556666\",\"code\":\"8097\"}')",
       "Bash(rm -rf \"C:\\\\Users\\\\DELL\\\\Documents\\\\monarkle\\\\apps\\\\api\\\\prisma\\\\migrations\")",
       "Bash(rm -f \"C:\\\\Users\\\\DELL\\\\Documents\\\\monarkle\\\\apps\\\\api\\\\prisma\\\\dev.db\")",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(curl -s -X POST http://localhost:4000/auth/otp/send -H \"Content-Type: application/json\" -d '{\"phone\":\"+2349165343485\"}')",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(gh auth *)",
+      "Bash(git config *)",
+      "Read(//c/Users/DELL/.ssh/**)",
+      "Bash(ssh -T git@github.com -o BatchMode=yes -o ConnectTimeout=5)",
+      "Bash(grep -i \"\\\\.env$\")",
+      "Bash(curl -s -m 8 http://localhost:4000/health)",
+      "Bash(curl -s -m 8 -X POST http://localhost:4000/auth/login -H \"Content-Type: application/json\" -d '{\"identifier\":\"+2348012345678\",\"password\":\"password123\"}')",
+      "Bash(nslookup ep-weathered-king-ay411nar-pooler.c-5.us-east-2.aws.neon.tech)",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName ep-weathered-king-ay411nar-pooler.c-5.us-east-2.aws.neon.tech -Port 5432\")",
+      "Bash(powershell -Command \"Test-NetConnection -ComputerName 3.23.109.155 -Port 5432 -WarningAction SilentlyContinue | Select-Object -ExpandProperty TcpTestSucceeded\")",
+      "Bash(NODE_OPTIONS=\"--dns-result-order=ipv4first\" npx prisma migrate dev --name add_route_timestamps)",
+      "Read(//c/Windows/System32/drivers/etc/**)",
+      "Bash(echo \"3.23.109.155 ep-weathered-king-ay411nar-pooler.c-5.us-east-2.aws.neon.tech\")",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_eKbwV2tl7Yds@3.23.109.155:5432/neondb?sslmode=require\" npx prisma migrate dev --name add_route_timestamps)",
+      "Bash(powershell -Command \"\\([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent\\(\\)\\).IsInRole\\([Security.Principal.WindowsBuiltinRole]::Administrator\\)\")",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")"
     ]
   }
 }

@@ -1,14 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '../../theme';
 
-export default function SplashScreen({ onDone }: { onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 1200);
-    return () => clearTimeout(t);
-  }, [onDone]);
-
+export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoCircle}>

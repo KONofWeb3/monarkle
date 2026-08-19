@@ -14,14 +14,23 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'VerifyCollection'>;
 
 export default function VerifyCollectionScreen({ navigation, route: navRoute }: Props) {
   const { route, completeStop } = useAppState();
-  const stop = route.stops.find((s) => s.id === navRoute.params.stopId);
+  const stop = route?.stops.find((s) => s.id === navRoute.params.stopId);
   const [scanned, setScanned] = useState(false);
   const [weight, setWeight] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   if (!stop) return null;
 
-  const onConfirm = () => {
-    completeStop(stop.id, parseFloat(weight || '0'));
-    navigation.replace('StopComplete', { stopId: stop.id });
+  const onConfirm = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await completeStop(stop.id, parseFloat(weight || '0'));
+      navigation.replace('StopComplete', { stopId: stop.id });
+    } catch (e: any) {
+      setError(e.message ?? 'Could not confirm this collection');
+      setBusy(false);
+    }
   };
 
   return (
@@ -43,9 +52,11 @@ export default function VerifyCollectionScreen({ navigation, route: navRoute }: 
         <Text style={styles.summarySub}>{stop.customerName} · {stop.code}</Text>
       </View>
 
+      {error && <Text style={styles.error}>{error}</Text>}
       <Button
         label="Confirm collection"
         disabled={!weight || !scanned}
+        loading={busy}
         onPress={onConfirm}
         style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}
       />
@@ -60,4 +71,5 @@ const styles = StyleSheet.create({
   summary: { backgroundColor: colors.surfaceAlt, borderRadius: radius.md, padding: spacing.md, marginTop: spacing.md },
   summaryLabel: { ...typography.bodyMedium, color: colors.textPrimary },
   summarySub: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.md },
 });

@@ -17,14 +17,19 @@ const SERVICE_FEE = 1500;
 export default function PickupPaymentScreen({ navigation }: Props) {
   const { submitPickupDraft } = useAppState();
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onPay = () => {
+  const onPay = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      const pickup = submitPickupDraft();
-      setProcessing(false);
+    setError(null);
+    try {
+      const pickup = await submitPickupDraft();
       navigation.replace('PickupConfirmed', { pickupId: pickup.id });
-    }, 1200);
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not confirm your pickup. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -48,6 +53,8 @@ export default function PickupPaymentScreen({ navigation }: Props) {
         <Text style={styles.secureText}>Payments are securely processed via Paystack. Your card details never leave the app.</Text>
       </View>
 
+      {error && <Text style={styles.error}>{error}</Text>}
+
       <Button
         label={`Pay ₦${SERVICE_FEE.toLocaleString()}`}
         loading={processing}
@@ -66,4 +73,5 @@ const styles = StyleSheet.create({
   rowValue: { ...typography.bodyMedium, color: colors.textPrimary },
   secureBanner: { flexDirection: 'row', backgroundColor: colors.primaryLight, borderRadius: radius.md, padding: spacing.md, marginTop: spacing.lg, alignItems: 'flex-start' },
   secureText: { ...typography.caption, color: colors.primary, marginLeft: spacing.sm, flex: 1 },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.lg },
 });

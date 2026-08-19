@@ -16,7 +16,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'DropoffQRCode'>;
 export default function DropoffQRCodeScreen({ navigation, route }: Props) {
   const { pickups } = useAppState();
   const pickup = pickups.find((p) => p.id === route.params.pickupId);
-  const code = `DO-2026-${(pickup?.code ?? 'K7X3').slice(-4).toUpperCase()}`;
+  const code = pickup?.qrCode ?? `DO-${(pickup?.code ?? 'K7X3').slice(-4).toUpperCase()}`;
 
   return (
     <ScreenContainer scroll>

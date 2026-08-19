@@ -15,21 +15,33 @@ type Props = NativeStackScreenProps<WalletStackParamList, 'AddBankAccount'>;
 type Step = 'form' | 'verifying' | 'confirm';
 
 export default function AddBankAccountScreen({ navigation }: Props) {
-  const { setBankAccount } = useAppState();
+  const { user, setBankAccount } = useAppState();
   const [step, setStep] = useState<Step>('form');
   const [bank, setBank] = useState('');
   const [account, setAccount] = useState('');
   const [showBanks, setShowBanks] = useState(false);
-  const resolvedName = 'ADAEZE CHUKWUEMEKA';
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // No bank-account-resolution API wired up (would need Paystack) — this
+  // mocks the "confirm your name" UX step using the signed-in user's name.
+  const resolvedName = user.fullName.toUpperCase();
 
   const onVerify = () => {
     setStep('verifying');
     setTimeout(() => setStep('confirm'), 1200);
   };
 
-  const onSave = () => {
-    setBankAccount({ bankName: bank, accountNumber: account, accountName: resolvedName });
-    navigation.goBack();
+  const onSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await setBankAccount({ bankName: bank, accountNumber: account, accountName: resolvedName });
+      navigation.goBack();
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not save this account');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -71,6 +83,8 @@ export default function AddBankAccountScreen({ navigation }: Props) {
         <Ionicons name="lock-closed-outline" size={12} color={colors.textSecondary} /> Your account details are encrypted. We use Paystack to process all transfers.
       </Text>
 
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
       {step === 'verifying' ? (
         <View style={styles.verifyingRow}>
           <ActivityIndicator color={colors.primary} />
@@ -80,6 +94,7 @@ export default function AddBankAccountScreen({ navigation }: Props) {
         <Button
           label="Save account"
           disabled={!bank || account.length < 10}
+          loading={saving}
           onPress={step === 'confirm' ? onSave : onVerify}
           style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}
         />
@@ -100,6 +115,7 @@ const styles = StyleSheet.create({
   confirmName: { ...typography.h4, color: colors.primary },
   confirmHint: { ...typography.caption, color: colors.primary, marginTop: 4 },
   secureHint: { ...typography.caption, color: colors.textSecondary },
+  errorText: { ...typography.caption, color: colors.danger, marginTop: spacing.md },
   verifyingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: spacing.xl, marginBottom: spacing.xl },
   verifyingText: { ...typography.body, color: colors.textBody, marginLeft: spacing.sm },
 });

@@ -18,6 +18,21 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState(user.fullName);
   const [phone, setPhone] = useState(user.phone);
   const [accountType, setAccountType] = useState(user.accountType);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSave = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await updateUser({ fullName, phone, accountType });
+      navigation.goBack();
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not save changes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScreenContainer scroll>
@@ -38,12 +53,12 @@ export default function EditProfileScreen({ navigation }: Props) {
         })}
       </View>
 
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
       <Button
         label="Save changes"
-        onPress={() => {
-          updateUser({ fullName, phone, accountType });
-          navigation.goBack();
-        }}
+        loading={loading}
+        onPress={onSave}
         style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}
       />
     </ScreenContainer>
@@ -56,4 +71,5 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm + 2, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, marginRight: spacing.sm, marginBottom: spacing.sm },
   chipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   chipText: { ...typography.bodyMedium, color: colors.textBody },
+  errorText: { ...typography.caption, color: colors.danger, marginTop: spacing.md },
 });

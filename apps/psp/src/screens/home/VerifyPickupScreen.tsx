@@ -15,12 +15,21 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'VerifyPickup'>;
 export default function VerifyPickupScreen({ navigation }: Props) {
   const { activeJob, completeActiveJob } = useAppState();
   const [weight, setWeight] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   if (!activeJob) return null;
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     const w = parseFloat(weight || '0');
-    completeActiveJob(w);
-    navigation.replace('JobComplete', { payout: activeJob.payout });
+    setBusy(true);
+    setError(null);
+    try {
+      await completeActiveJob(w);
+      navigation.replace('JobComplete', { payout: activeJob.payout });
+    } catch (e: any) {
+      setError(e.message ?? 'Could not confirm this collection');
+      setBusy(false);
+    }
   };
 
   return (
@@ -40,7 +49,8 @@ export default function VerifyPickupScreen({ navigation }: Props) {
         <Text style={styles.summaryValue}>{activeJob.category} · {activeJob.quantity}</Text>
       </View>
 
-      <Button label="Confirm collection" disabled={!weight} onPress={onSubmit} style={{ marginTop: spacing.xl, marginBottom: spacing.xl }} />
+      {error && <Text style={styles.error}>{error}</Text>}
+      <Button label="Confirm collection" disabled={!weight} loading={busy} onPress={onSubmit} style={{ marginTop: spacing.xl, marginBottom: spacing.xl }} />
     </ScreenContainer>
   );
 }
@@ -52,4 +62,5 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.surfaceAlt, borderRadius: radius.md, padding: spacing.md, marginTop: spacing.md },
   summaryLabel: { ...typography.caption, color: colors.textSecondary },
   summaryValue: { ...typography.captionMedium, color: colors.textPrimary },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.md },
 });

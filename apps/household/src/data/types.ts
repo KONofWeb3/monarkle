@@ -17,6 +17,7 @@ export type Pickup = {
   status: PickupStatus;
   serviceFee: number;
   netPayout?: number;
+  qrCode?: string;
   psp?: { name: string; phone: string; rating: number };
   createdAt: string;
   completedAt?: string;

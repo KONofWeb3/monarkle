@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +15,33 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'JobDetail'>;
 export default function JobDetailScreen({ navigation, route }: Props) {
   const { availableJobs, acceptJob, declineJob } = useAppState();
   const job = availableJobs.find((j) => j.id === route.params.jobId);
+  const [busy, setBusy] = useState<'accept' | 'decline' | null>(null);
+  const [error, setError] = useState<string | null>(null);
   if (!job) return null;
+
+  const onAccept = async () => {
+    setBusy('accept');
+    setError(null);
+    try {
+      await acceptJob(job.id);
+      navigation.replace('ActiveJob');
+    } catch (e: any) {
+      setError(e.message ?? 'Could not accept this job — it may have just been taken.');
+      setBusy(null);
+    }
+  };
+
+  const onDecline = async () => {
+    setBusy('decline');
+    setError(null);
+    try {
+      await declineJob(job.id);
+      navigation.goBack();
+    } catch (e: any) {
+      setError(e.message ?? 'Could not decline this job');
+      setBusy(null);
+    }
+  };
 
   return (
     <ScreenContainer scroll>
@@ -40,21 +66,21 @@ export default function JobDetailScreen({ navigation, route }: Props) {
         <Text style={styles.infoText} onPress={() => Linking.openURL(`tel:0000000000`)}>Contact customer before heading out</Text>
       </View>
 
+      {error && <Text style={styles.error}>{error}</Text>}
+
       <Button
         label="Accept job"
-        onPress={() => {
-          acceptJob(job.id);
-          navigation.replace('ActiveJob');
-        }}
+        loading={busy === 'accept'}
+        disabled={busy !== null}
+        onPress={onAccept}
         style={{ marginTop: spacing.xl }}
       />
       <Button
         label="Decline"
         variant="outline"
-        onPress={() => {
-          declineJob(job.id);
-          navigation.goBack();
-        }}
+        loading={busy === 'decline'}
+        disabled={busy !== null}
+        onPress={onDecline}
         style={{ marginTop: spacing.sm, marginBottom: spacing.xl }}
       />
     </ScreenContainer>
@@ -69,4 +95,5 @@ const styles = StyleSheet.create({
   payoutValue: { ...typography.h1, color: colors.primary, marginTop: 4 },
   infoBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.infoBg, borderRadius: 12, padding: spacing.md, marginTop: spacing.lg },
   infoText: { ...typography.caption, color: colors.info, marginLeft: spacing.sm },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.lg },
 });

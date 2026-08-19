@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import SplashScreen from '../screens/onboarding/SplashScreen';
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
@@ -7,14 +7,13 @@ import MainTabNavigator from './MainTabNavigator';
 import { useAppState } from '../data/AppContext';
 
 export default function RootNavigator() {
-  const [showSplash, setShowSplash] = useState(true);
-  const { hasOnboarded, isAuthenticated } = useAppState();
+  const { isInitializing, hasOnboarded, isAuthenticated } = useAppState();
 
-  if (showSplash) {
-    return <SplashScreen onDone={() => setShowSplash(false)} />;
+  if (isInitializing) {
+    return <SplashScreen />;
   }
 
-  if (!hasOnboarded) {
+  if (!isAuthenticated && !hasOnboarded) {
     return <OnboardingScreen onDone={() => {}} />;
   }
 

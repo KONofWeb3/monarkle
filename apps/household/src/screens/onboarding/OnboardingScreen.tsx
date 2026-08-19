@@ -1,13 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import ProgressDots from '../../components/ProgressDots';
 import { colors, spacing, typography } from '../../theme';
 import { useAppState } from '../../data/AppContext';
-
-const { width } = Dimensions.get('window');
 
 const slides = [
   {
@@ -29,12 +27,10 @@ const slides = [
 
 export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const [index, setIndex] = useState(0);
-  const listRef = useRef<FlatList>(null);
   const { completeOnboarding } = useAppState();
 
   const next = () => {
     if (index < slides.length - 1) {
-      listRef.current?.scrollToIndex({ index: index + 1 });
       setIndex(index + 1);
     } else {
       completeOnboarding();
@@ -44,24 +40,13 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <FlatList
-        ref={listRef}
-        data={slides}
-        keyExtractor={(s) => s.title}
-        horizontal
-        pagingEnabled
-        scrollEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={[styles.slide, { width }]}>
-            <View style={styles.artWrap}>
-              <View style={styles.artCircle}>
-                <Ionicons name={item.icon} size={72} color={colors.primary} />
-              </View>
-            </View>
+      <View style={styles.slide}>
+        <View style={styles.artWrap}>
+          <View style={styles.artCircle}>
+            <Ionicons name={slides[index].icon} size={72} color={colors.primary} />
           </View>
-        )}
-      />
+        </View>
+      </View>
       <View style={styles.sheet}>
         <Text style={styles.title}>{slides[index].title}</Text>
         <Text style={styles.body}>{slides[index].body}</Text>
@@ -77,7 +62,7 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.surface },
-  slide: { alignItems: 'center', justifyContent: 'center' },
+  slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   artWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt, width: '100%' },
   artCircle: {
     width: 180,

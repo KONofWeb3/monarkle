@@ -8,7 +8,11 @@ import UsersPage from './pages/UsersPage';
 import ESGReportsPage from './pages/ESGReportsPage';
 
 function Gate() {
-  const { isAuthenticated } = useAppState();
+  const { isAuthenticated, isInitializing } = useAppState();
+
+  if (isInitializing) {
+    return <div className="min-h-screen bg-[--color-bg]" />;
+  }
 
   if (!isAuthenticated) {
     return (

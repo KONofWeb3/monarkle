@@ -88,14 +88,14 @@ export default function UsersPage() {
                 <td className="px-5 py-3.5 text-right">
                   {u.status === 'suspended' ? (
                     <button
-                      onClick={() => setUserStatus(u.id, 'active')}
+                      onClick={() => { setUserStatus(u.id, 'active').catch(() => {}); }}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] px-2.5 py-1.5 text-xs font-medium text-[--color-primary] hover:bg-[--color-primary-light]"
                     >
                       <ShieldCheck size={13} /> Reinstate
                     </button>
                   ) : (
                     <button
-                      onClick={() => setUserStatus(u.id, 'suspended')}
+                      onClick={() => { setUserStatus(u.id, 'suspended').catch(() => {}); }}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] px-2.5 py-1.5 text-xs font-medium text-[--color-danger] hover:bg-[--color-danger-bg]"
                     >
                       <ShieldOff size={13} /> Suspend

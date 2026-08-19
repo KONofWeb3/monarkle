@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,12 +18,25 @@ const statusMap: Record<StopStatus, StatusKind> = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
-  const { profile, route, startRoute, activeStopIndex } = useAppState();
-  const totalWeightEst = route.stops.length * 8;
+  const { profile, route, startRoute } = useAppState();
+  const [starting, setStarting] = useState(false);
+  const totalWeightEst = (route?.stops.length ?? 0) * 8;
+  const completedCount = route?.stops.filter((s) => s.status === 'completed').length ?? 0;
 
-  const onStopPress = (stopId: string, sequence: number) => {
-    if (route.status === 'notStarted') return;
-    if (sequence - 1 === activeStopIndex) navigation.navigate('StopDetail', { stopId });
+  const onStopPress = (stop: NonNullable<typeof route>['stops'][number]) => {
+    if (route?.status === 'notStarted') return;
+    if (stop.status === 'enRoute' || stop.status === 'arrived') {
+      navigation.navigate('StopDetail', { stopId: stop.id });
+    }
+  };
+
+  const onStartRoute = async () => {
+    setStarting(true);
+    try {
+      await startRoute();
+    } finally {
+      setStarting(false);
+    }
   };
 
   return (
@@ -41,11 +54,13 @@ export default function HomeScreen({ navigation }: Props) {
 
         <View style={styles.routeCard}>
           <Text style={styles.routeLabel}>Today&apos;s route</Text>
-          <Text style={styles.routeValue}>{route.stops.length} stops · ~{totalWeightEst}kg est.</Text>
-          {route.status === 'notStarted' ? (
-            <Button label="Start Route" variant="secondary" onPress={startRoute} style={{ marginTop: spacing.md }} fullWidth={false} />
+          <Text style={styles.routeValue}>
+            {route ? `${route.stops.length} stops · ~${totalWeightEst}kg est.` : 'No route scheduled'}
+          </Text>
+          {!route ? null : route.status === 'notStarted' ? (
+            <Button label="Start Route" variant="secondary" loading={starting} onPress={onStartRoute} style={{ marginTop: spacing.md }} fullWidth={false} />
           ) : route.status === 'inProgress' ? (
-            <Text style={styles.inProgressText}>Stop {activeStopIndex + 1} of {route.stops.length} in progress</Text>
+            <Text style={styles.inProgressText}>Stop {completedCount + 1} of {route.stops.length} in progress</Text>
           ) : (
             <Pressable onPress={() => navigation.navigate('RouteComplete')}>
               <Text style={styles.inProgressText}>Route completed — view summary ›</Text>
@@ -55,16 +70,23 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       <FlatList
-        data={route.stops}
+        data={route?.stops ?? []}
         keyExtractor={(s) => s.id}
         contentContainerStyle={styles.body}
-        ListHeaderComponent={<Text style={styles.sectionTitle}>Stops</Text>}
+        ListHeaderComponent={route ? <Text style={styles.sectionTitle}>Stops</Text> : null}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="map-outline" size={36} color={colors.textSecondary} />
+            <Text style={styles.emptyTitle}>No route scheduled for today</Text>
+            <Text style={styles.emptySub}>Check back tomorrow, or contact Ops if this looks wrong.</Text>
+          </View>
+        }
         renderItem={({ item }) => {
-          const isActive = route.status === 'inProgress' && item.sequence - 1 === activeStopIndex;
+          const isActive = item.status === 'enRoute' || item.status === 'arrived';
           return (
             <Pressable
               style={[styles.stopRow, isActive && styles.stopRowActive]}
-              onPress={() => onStopPress(item.id, item.sequence)}
+              onPress={() => onStopPress(item)}
             >
               <View style={styles.seqCircle}>
                 <Text style={styles.seqText}>{item.sequence}</Text>
@@ -104,4 +126,7 @@ const styles = StyleSheet.create({
   stopCustomer: { ...typography.bodyMedium, color: colors.textPrimary },
   stopMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   stopAddress: { ...typography.tiny, color: colors.textSecondary, marginTop: 2 },
+  empty: { alignItems: 'center', paddingTop: spacing.xxxl * 2 },
+  emptyTitle: { ...typography.bodyMedium, color: colors.textPrimary, marginTop: spacing.md },
+  emptySub: { ...typography.caption, color: colors.textSecondary, marginTop: 4, textAlign: 'center' },
 });

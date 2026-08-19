@@ -1,6 +1,8 @@
 export type AuthStackParamList = {
   CreateAccount: undefined;
-  VerifyPhone: { phone: string; mode: 'signup' | 'reset' };
+  VerifyPhone:
+    | { mode: 'signup'; phone: string; fullName: string; email?: string; password: string }
+    | { mode: 'reset'; phone: string };
   SetupProfile: undefined;
   EnableLocation: undefined;
   EnableNotifications: undefined;
@@ -8,7 +10,7 @@ export type AuthStackParamList = {
   Login: undefined;
   ForgotPassword: undefined;
   ForgotPasswordVerify: { phone: string };
-  CreateNewPassword: undefined;
+  CreateNewPassword: { phone: string };
 };
 
 export type HomeStackParamList = {

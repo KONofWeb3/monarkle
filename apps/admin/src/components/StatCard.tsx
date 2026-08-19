@@ -12,8 +12,8 @@ export default function StatCard({
 }: {
   label: string;
   value: string;
-  change: string;
-  trend: 'up' | 'down';
+  change?: string;
+  trend?: 'up' | 'down';
   icon: LucideIcon;
 }) {
   return (
@@ -25,10 +25,12 @@ export default function StatCard({
         </div>
       </div>
       <p className="mt-2 font-display text-2xl font-bold text-[--color-ink]">{value}</p>
-      <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${trend === 'up' ? 'text-[--color-primary]' : 'text-[--color-danger]'}`}>
-        {trend === 'up' ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-        {change}
-      </div>
+      {change && (
+        <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${trend === 'up' ? 'text-[--color-primary]' : 'text-[--color-danger]'}`}>
+          {trend === 'up' ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+          {change}
+        </div>
+      )}
     </div>
   );
 }

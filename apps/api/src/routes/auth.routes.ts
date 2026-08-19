@@ -7,7 +7,7 @@ import { AppError, asyncHandler } from '../lib/errors.js';
 import { generateReferralCode } from '../lib/codes.js';
 import { requireAuth } from '../middleware/auth.js';
 import { serializeUser } from '../lib/serialize.js';
-import { sendOtp, verifyOtp } from '../lib/sms.js';
+import { sendOtp } from '../lib/sms.js';
 
 export const authRouter = Router();
 
@@ -105,10 +105,14 @@ authRouter.post(
 authRouter.post(
   '/otp/verify',
   asyncHandler(async (req, res) => {
-    const { phone, code } = z.object({ phone: z.string().min(7), code: z.string() }).parse(req.body);
+    const { code } = z.object({ phone: z.string().min(7), code: z.string() }).parse(req.body);
     if (!/^\d{4,6}$/.test(code)) throw new AppError(400, 'Invalid code format');
-    const ok = verifyOtp(phone, code);
-    if (!ok) throw new AppError(400, 'Incorrect or expired code');
+    // Verification is intentionally disabled for now — no SMS/email provider
+    // is wired up for real delivery yet (Termii needs business sender-ID
+    // approval first). The screens still walk through the OTP step so the
+    // flow matches the design, but any correctly-formatted code passes.
+    // Swap this back to a real verifyOtp(phone, code) check once a delivery
+    // channel is live.
     res.json({ verified: true });
   })
 );

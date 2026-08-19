@@ -45,6 +45,7 @@ pspRouter.post(
     const updated = await prisma.pickup.update({
       where: { id: pickup.id },
       data: { pspId: req.user!.userId, status: 'ASSIGNED' },
+      include: { household: { select: { fullName: true, phone: true } } },
     });
     res.json({ pickup: updated });
   })
@@ -69,7 +70,11 @@ pspRouter.post(
       where: { id: req.params.id, pspId: req.user!.userId },
     });
     if (!pickup) throw new AppError(404, 'Job not found');
-    const updated = await prisma.pickup.update({ where: { id: pickup.id }, data: { status } });
+    const updated = await prisma.pickup.update({
+      where: { id: pickup.id },
+      data: { status },
+      include: { household: { select: { fullName: true, phone: true } } },
+    });
     res.json({ pickup: updated });
   })
 );
@@ -91,6 +96,7 @@ pspRouter.post(
       prisma.pickup.update({
         where: { id: pickup.id },
         data: { status: 'COMPLETED', weightKg, netPayout, completedAt: new Date() },
+        include: { household: { select: { fullName: true, phone: true } } },
       }),
       prisma.wallet.update({
         where: { userId: req.user!.userId },

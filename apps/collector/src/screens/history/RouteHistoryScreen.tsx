@@ -28,7 +28,10 @@ export default function RouteHistoryScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.date}>{item.date}</Text>
-              <Text style={styles.meta}>{item.stopsCompleted}/{item.totalStops} stops · {item.totalWeightKg}kg · {Math.round(item.durationMins / 60)}h {item.durationMins % 60}m</Text>
+              <Text style={styles.meta}>
+                {item.stopsCompleted}/{item.totalStops} stops · {item.totalWeightKg}kg
+                {item.durationMins != null ? ` · ${Math.round(item.durationMins / 60)}h ${item.durationMins % 60}m` : ''}
+              </Text>
             </View>
           </View>
         )}

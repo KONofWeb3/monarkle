@@ -89,7 +89,9 @@
       "Bash(git branch *)",
       "Bash(git push *)",
       "Bash(powershell -Command \"Get-Process git -ErrorAction SilentlyContinue | Stop-Process -Force\")",
-      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(curl -s -m 15 https://monarkle-production.up.railway.app/health)",
+      "Bash(curl -s -m 15 -X POST https://monarkle-production.up.railway.app/auth/login -H \"Content-Type: application/json\" -d '{\"identifier\":\"+2348012345678\",\"password\":\"password123\"}')"
     ]
   }
 }

@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Dev machine's LAN IP — update if your network changes. Must be reachable
-// from the phone running Expo Go (same Wi-Fi as the dev machine).
-export const API_BASE_URL = 'http://10.35.10.151:4000';
+// Live backend, hosted on Railway — reachable from anywhere, not just the
+// dev machine's Wi-Fi.
+export const API_BASE_URL = 'https://monarkle-production.up.railway.app';
 
 const TOKEN_KEY = 'monarkle_collector_token';
 

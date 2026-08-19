@@ -26,25 +26,35 @@ export async function sendOtp(phone: string): Promise<{ sent: boolean; mock: boo
     return { sent: true, mock: true };
   }
 
-  const res = await fetch(TERMII_BASE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      to: phone,
-      from: TERMII_SENDER_ID,
-      sms: `Your MONARKLE verification code is ${code}. It expires in 5 minutes.`,
-      type: 'plain',
-      channel: 'generic',
-      api_key: TERMII_API_KEY,
-    }),
-  });
+  // A failed real send (e.g. an unapproved sender ID) must not block signup/
+  // login — OTP verification is disabled for now anyway (see auth.routes.ts),
+  // so the code only needs to exist somewhere, not necessarily be delivered.
+  // Fall back to mock/logged mode rather than throwing.
+  try {
+    const res = await fetch(TERMII_BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: phone,
+        from: TERMII_SENDER_ID,
+        sms: `Your MONARKLE verification code is ${code}. It expires in 5 minutes.`,
+        type: 'plain',
+        channel: 'generic',
+        api_key: TERMII_API_KEY,
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Termii SMS send failed (${res.status}): ${body}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Termii SMS send failed (${res.status}): ${body}`);
+    }
+
+    return { sent: true, mock: false };
+  } catch (err) {
+    console.warn(`[OTP] Real SMS send failed, falling back to mock mode: ${(err as Error).message}`);
+    console.log(`[mock OTP] ${phone} -> ${code}`);
+    return { sent: true, mock: true };
   }
-
-  return { sent: true, mock: false };
 }
 
 export function verifyOtp(phone: string, code: string): boolean {

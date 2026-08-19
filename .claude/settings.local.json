@@ -83,7 +83,13 @@
       "Bash(echo \"3.23.109.155 ep-weathered-king-ay411nar-pooler.c-5.us-east-2.aws.neon.tech\")",
       "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_eKbwV2tl7Yds@3.23.109.155:5432/neondb?sslmode=require\" npx prisma migrate dev --name add_route_timestamps)",
       "Bash(powershell -Command \"\\([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent\\(\\)\\).IsInRole\\([Security.Principal.WindowsBuiltinRole]::Administrator\\)\")",
-      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")"
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(powershell -Command \"Get-Process git -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
     ]
   }
 }

@@ -21,6 +21,7 @@ const registerSchema = z.object({
   role: z.enum(ROLES).default('HOUSEHOLD'),
   accountType: z.enum(['Household', 'Business', 'Estate', 'School', 'Market']).optional(),
   city: z.string().optional(),
+  referredBy: z.string().trim().toUpperCase().optional(),
 }).refine((d) => d.phone || d.email, { message: 'phone or email is required' });
 
 authRouter.post(
@@ -37,6 +38,17 @@ authRouter.post(
       },
     });
     if (existing) throw new AppError(409, 'An account with this phone or email already exists');
+
+    // A referral code, if given, must belong to a real household account —
+    // fail loudly rather than silently dropping a typo'd code.
+    let referrer: { id: string; referralCode: string | null } | null = null;
+    if (data.referredBy) {
+      referrer = await prisma.user.findUnique({
+        where: { referralCode: data.referredBy },
+        select: { id: true, referralCode: true },
+      });
+      if (!referrer) throw new AppError(400, 'Invalid referral code');
+    }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
     const initials = data.fullName
@@ -58,9 +70,24 @@ authRouter.post(
         city: data.city ?? 'Lagos',
         avatarInitials: initials || 'U',
         referralCode: data.role === 'HOUSEHOLD' ? generateReferralCode(data.fullName) : undefined,
+        referredBy: referrer?.referralCode ?? undefined,
         wallet: { create: { balance: 0 } },
       },
     });
+
+    // Referral bonus is granted immediately on signup (not gated on the new
+    // user's first pickup) — there's no invite-tracking system to hold a
+    // "pending" state in, so instant-on-signup is the honest simple version.
+    if (referrer) {
+      await prisma.$transaction([
+        prisma.rewardEntry.create({
+          data: { userId: referrer.id, label: `Referral bonus — ${data.fullName} joined`, points: 100 },
+        }),
+        prisma.rewardEntry.create({
+          data: { userId: user.id, label: 'Welcome bonus — referred by a friend', points: 50 },
+        }),
+      ]);
+    }
 
     const token = signToken({ userId: user.id, role: user.role });
     res.status(201).json({ token, user: serializeUser(user) });
@@ -81,6 +108,7 @@ authRouter.post(
     });
     if (!user) throw new AppError(401, 'Invalid credentials');
     if (user.status === 'SUSPENDED') throw new AppError(403, 'This account has been suspended');
+    if (user.status === 'DELETED') throw new AppError(403, 'This account has been deleted');
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new AppError(401, 'Invalid credentials');
@@ -117,20 +145,31 @@ authRouter.post(
   })
 );
 
-const resetSchema = z.object({
-  phone: z.string().min(7),
-  newPassword: z.string().min(6),
-});
+// NOTE: there used to be an unauthenticated POST /password/reset here (just
+// phone + newPassword, no proof of ownership). It's been removed — that's a
+// real account-takeover hole, not a shortcut worth keeping around even
+// unused. Self-service reset needs a verified channel (SMS/email) before it
+// comes back; until then ForgotPasswordScreen points users to support.
 
 authRouter.post(
-  '/password/reset',
+  '/deactivate',
+  requireAuth,
   asyncHandler(async (req, res) => {
-    const { phone, newPassword } = resetSchema.parse(req.body);
-    const user = await prisma.user.findUnique({ where: { phone } });
-    if (!user) throw new AppError(404, 'No account found for this phone number');
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
-    res.json({ reset: true });
+    const { password } = z.object({ password: z.string().min(1) }).parse(req.body);
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) throw new AppError(404, 'User not found');
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) throw new AppError(401, 'Incorrect password');
+
+    // Soft delete: flips status to DELETED (blocks future logins) rather
+    // than a hard row delete, since Pickup/Payout/RewardEntry/Route records
+    // referencing this user aren't cascade-deletable without corrupting
+    // other users' history (e.g. a PSP's completed-job record). A real
+    // "erase my data" flow needs a dedicated anonymization pass, not a
+    // same-day cascading delete.
+    await prisma.user.update({ where: { id: user.id }, data: { status: 'DELETED' } });
+    res.json({ deactivated: true });
   })
 );
 

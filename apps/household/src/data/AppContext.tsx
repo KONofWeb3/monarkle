@@ -39,7 +39,7 @@ type AppState = {
 
 type AppActions = {
   completeOnboarding: () => void;
-  registerAccount: (input: { fullName: string; phone: string; email?: string; password: string }) => Promise<void>;
+  registerAccount: (input: { fullName: string; phone: string; email?: string; password: string; referredBy?: string }) => Promise<void>;
   finishSignup: () => void;
   signIn: (identifier: string, password: string) => Promise<void>;
   signOut: () => void;

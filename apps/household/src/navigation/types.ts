@@ -1,16 +1,15 @@
 export type AuthStackParamList = {
   CreateAccount: undefined;
-  VerifyPhone:
-    | { mode: 'signup'; phone: string; fullName: string; email?: string; password: string }
-    | { mode: 'reset'; phone: string };
   SetupProfile: undefined;
   EnableLocation: undefined;
   EnableNotifications: undefined;
   AllSet: undefined;
   Login: undefined;
+  // Self-service password reset needs a verification channel (SMS/email) to
+  // be safe — without one it's either a fake OTP step or an account-takeover
+  // hole. Neither is acceptable, so this is a "contact support" screen for
+  // now rather than a real reset flow.
   ForgotPassword: undefined;
-  ForgotPasswordVerify: { phone: string };
-  CreateNewPassword: { phone: string };
 };
 
 export type HomeStackParamList = {

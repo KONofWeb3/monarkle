@@ -6,17 +6,19 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { colors, spacing, typography } from '../../theme';
 import { AuthStackParamList } from '../../navigation/types';
-import { sendOtp } from '../../lib/householdApi';
+import { useAppState } from '../../data/AppContext';
 import { normalizePhone } from '../../lib/phone';
 import { ApiError } from '../../lib/api';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateAccount'>;
 
 export default function CreateAccountScreen({ navigation }: Props) {
+  const { registerAccount } = useAppState();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,18 +27,17 @@ export default function CreateAccountScreen({ navigation }: Props) {
   const onContinue = async () => {
     setError(null);
     setLoading(true);
-    const normalizedPhone = normalizePhone(phone);
     try {
-      await sendOtp(normalizedPhone);
-      navigation.navigate('VerifyPhone', {
-        mode: 'signup',
-        phone: normalizedPhone,
+      await registerAccount({
         fullName,
+        phone: normalizePhone(phone),
         email: email || undefined,
         password,
+        referredBy: referralCode.trim() || undefined,
       });
+      navigation.navigate('SetupProfile');
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not send verification code');
+      setError(e instanceof ApiError ? e.message : 'Could not create your account');
     } finally {
       setLoading(false);
     }
@@ -53,6 +54,13 @@ export default function CreateAccountScreen({ navigation }: Props) {
       <Input label="Phone Number" placeholder="Enter your phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
       <Input label="Email (Optional)" placeholder="Enter your email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
       <Input label="Password" placeholder="Create a password" value={password} onChangeText={setPassword} secure />
+      <Input
+        label="Referral Code (Optional)"
+        placeholder="e.g. EMEKA-7K2P"
+        value={referralCode}
+        onChangeText={setReferralCode}
+        autoCapitalize="characters"
+      />
       {error && <Text style={styles.error}>{error}</Text>}
 
       <Button

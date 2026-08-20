@@ -1,7 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import ScreenContainer from '../../components/ScreenContainer';
 import Header from '../../components/Header';
 import { colors, radius, spacing, typography } from '../../theme';
@@ -17,11 +18,22 @@ export default function ProfileScreen({ navigation }: Props) {
 
   const menu: MenuItem[] = [
     { icon: 'person-outline', label: 'Edit profile', onPress: () => navigation.navigate('EditProfile') },
-    { icon: 'card-outline', label: 'Payment details', onPress: () => {} },
     { icon: 'gift-outline', label: 'Refer a friend', badge: 'Earn ₦', onPress: () => navigation.navigate('ReferEarn') },
     { icon: 'notifications-outline', label: 'Notification settings', onPress: () => navigation.navigate('NotificationSettings') },
-    { icon: 'help-circle-outline', label: 'Help & support', onPress: () => {} },
-    { icon: 'information-circle-outline', label: 'About Monarkle', onPress: () => {} },
+    {
+      icon: 'help-circle-outline',
+      label: 'Help & support',
+      onPress: () => Linking.openURL('mailto:support@monarkle.africa?subject=Support request'),
+    },
+    {
+      icon: 'information-circle-outline',
+      label: 'About Monarkle',
+      onPress: () =>
+        Alert.alert(
+          'About MONARKLE',
+          `Version ${Constants.expoConfig?.version ?? '1.0.0'}\n\nMONARKLE turns waste into wealth — connecting households, PSPs, and recyclers across Africa's circular economy.`
+        ),
+    },
     { icon: 'trash-outline', label: 'Delete account', danger: true, onPress: () => navigation.navigate('DeleteAccount') },
   ];
 

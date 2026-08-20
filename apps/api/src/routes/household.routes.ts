@@ -219,6 +219,41 @@ householdRouter.patch(
   })
 );
 
+const DEFAULT_NOTIFICATION_PREFS = {
+  assigned: true,
+  completed: true,
+  wallet: true,
+  payout: true,
+  promotions: false,
+};
+
+householdRouter.get(
+  '/notification-prefs',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    res.json({ prefs: { ...DEFAULT_NOTIFICATION_PREFS, ...((user?.notificationPrefs as object) ?? {}) } });
+  })
+);
+
+const notificationPrefsSchema = z.object({
+  assigned: z.boolean().optional(),
+  completed: z.boolean().optional(),
+  wallet: z.boolean().optional(),
+  payout: z.boolean().optional(),
+  promotions: z.boolean().optional(),
+});
+
+householdRouter.patch(
+  '/notification-prefs',
+  asyncHandler(async (req, res) => {
+    const patch = notificationPrefsSchema.parse(req.body);
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    const merged = { ...DEFAULT_NOTIFICATION_PREFS, ...((user?.notificationPrefs as object) ?? {}), ...patch };
+    await prisma.user.update({ where: { id: req.user!.userId }, data: { notificationPrefs: merged } });
+    res.json({ prefs: merged });
+  })
+);
+
 householdRouter.get(
   '/refer',
   asyncHandler(async (req, res) => {

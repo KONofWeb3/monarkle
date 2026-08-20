@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import Header from '../../components/Header';
 import ProgressBar from '../../components/ProgressBar';
 import Input from '../../components/Input';
+import DateField from '../../components/DateField';
 import Button from '../../components/Button';
 import { colors, radius, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
 import { useAppState } from '../../data/AppContext';
+import { getCurrentAddress } from '../../lib/location';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'PickupDetailsForm'>;
 
@@ -21,15 +23,43 @@ const quantities: { key: 'Small' | 'Medium' | 'Large'; sub: string }[] = [
 
 const times = ['Morning', 'Afternoon', 'Any time'];
 
+function formatForDraft(d: Date) {
+  return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function PickupDetailsFormScreen({ navigation }: Props) {
   const { updatePickupDraft } = useAppState();
   const [quantity, setQuantity] = useState<'Small' | 'Medium' | 'Large'>('Medium');
   const [address, setAddress] = useState('14 Admiralty Way, Lekki Phase 1, Lagos');
-  const [date, setDate] = useState('');
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState('Morning');
 
+  const onUseGps = async () => {
+    setLocating(true);
+    setLocationError(null);
+    try {
+      const result = await getCurrentAddress();
+      if (!result) {
+        setLocationError('Location permission denied — enter your address manually.');
+        return;
+      }
+      setAddress(result.address);
+    } catch {
+      setLocationError('Could not get your location. Enter your address manually.');
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const onContinue = () => {
-    updatePickupDraft({ quantity, address, date: date || 'Tomorrow', time });
+    updatePickupDraft({
+      quantity,
+      address,
+      date: date ? formatForDraft(date) : 'Tomorrow',
+      time,
+    });
     navigation.navigate('ReviewPickup');
   };
 
@@ -53,13 +83,23 @@ export default function PickupDetailsFormScreen({ navigation }: Props) {
 
       <Text style={styles.question}>Collection address</Text>
       <Input leftIcon="location-outline" value={address} onChangeText={setAddress} placeholder="Enter your address" />
-      <Pressable style={styles.gpsRow}>
-        <Ionicons name="navigate-circle-outline" size={16} color={colors.primary} />
-        <Text style={styles.gpsText}>Use my GPS location</Text>
+      <Pressable style={styles.gpsRow} onPress={onUseGps} disabled={locating}>
+        {locating ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Ionicons name="navigate-circle-outline" size={16} color={colors.primary} />
+        )}
+        <Text style={styles.gpsText}>{locating ? 'Getting your location…' : 'Use my GPS location'}</Text>
       </Pressable>
+      {locationError && <Text style={styles.errorText}>{locationError}</Text>}
 
-      <Text style={styles.question}>Preferred date</Text>
-      <Input leftIcon="calendar-outline" value={date} onChangeText={setDate} placeholder="e.g. Jul 8, 2026" />
+      <DateField
+        label="Preferred date"
+        value={date}
+        onChange={setDate}
+        minimumDate={new Date()}
+        placeholder="Select a pickup date"
+      />
 
       <Text style={styles.question}>Time preference</Text>
       <View style={styles.qtyRow}>
@@ -73,7 +113,7 @@ export default function PickupDetailsFormScreen({ navigation }: Props) {
         })}
       </View>
 
-      <Button label="Continue" onPress={onContinue} style={{ marginTop: spacing.xl, marginBottom: spacing.xl }} />
+      <Button label="Continue" disabled={!date} onPress={onContinue} style={{ marginTop: spacing.xl, marginBottom: spacing.xl }} />
     </ScreenContainer>
   );
 }
@@ -88,4 +128,5 @@ const styles = StyleSheet.create({
   timeChip: { flex: 1, alignItems: 'center', paddingVertical: spacing.md, marginHorizontal: 4, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   gpsRow: { flexDirection: 'row', alignItems: 'center', marginTop: -spacing.sm, marginBottom: spacing.sm },
   gpsText: { ...typography.captionMedium, color: colors.primary, marginLeft: spacing.xs },
+  errorText: { ...typography.caption, color: colors.danger, marginBottom: spacing.sm },
 });

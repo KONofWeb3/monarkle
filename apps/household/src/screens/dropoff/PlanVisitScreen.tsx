@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
 import Header from '../../components/Header';
-import Input from '../../components/Input';
+import DateField from '../../components/DateField';
 import Button from '../../components/Button';
 import { colors, radius, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
@@ -13,9 +13,13 @@ import { WasteCategory } from '../../data/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'PlanVisit'>;
 
+function formatForDraft(d: Date) {
+  return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function PlanVisitScreen({ navigation }: Props) {
   const { updatePickupDraft } = useAppState();
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState<Date | null>(null);
   const [category, setCategory] = useState<WasteCategory>('Plastic');
   const [quantity, setQuantity] = useState<'Small' | 'Medium' | 'Large'>('Medium');
 
@@ -24,7 +28,7 @@ export default function PlanVisitScreen({ navigation }: Props) {
       <Header title="Plan your visit" />
 
       <Text style={styles.question}>When will you drop it off?</Text>
-      <Input leftIcon="calendar-outline" placeholder="e.g. Jul 8, 2026" value={date} onChangeText={setDate} />
+      <DateField value={date} onChange={setDate} minimumDate={new Date()} placeholder="Select a date" />
 
       <Text style={styles.question}>What are you bringing?</Text>
       <View style={styles.chipRow}>
@@ -52,8 +56,9 @@ export default function PlanVisitScreen({ navigation }: Props) {
 
       <Button
         label="Review my visit"
+        disabled={!date}
         onPress={() => {
-          updatePickupDraft({ date: date || 'This week', category, quantity });
+          updatePickupDraft({ date: date ? formatForDraft(date) : 'This week', category, quantity });
           navigation.navigate('ReviewDropoff');
         }}
         style={{ marginTop: spacing.xl, marginBottom: spacing.xl }}

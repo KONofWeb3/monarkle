@@ -12,11 +12,12 @@ type Props = {
   title: string;
   body: string;
   primaryLabel: string;
+  primaryLoading?: boolean;
   onPrimary: () => void;
   onSkip: () => void;
 };
 
-export default function PermissionScreen({ icon, iconBg, iconColor, title, body, primaryLabel, onPrimary, onSkip }: Props) {
+export default function PermissionScreen({ icon, iconBg, iconColor, title, body, primaryLabel, primaryLoading, onPrimary, onSkip }: Props) {
   return (
     <ScreenContainer>
       <View style={styles.center}>
@@ -27,7 +28,7 @@ export default function PermissionScreen({ icon, iconBg, iconColor, title, body,
         <Text style={styles.body}>{body}</Text>
       </View>
       <View style={styles.footer}>
-        <Button label={primaryLabel} onPress={onPrimary} />
+        <Button label={primaryLabel} loading={primaryLoading} onPress={onPrimary} />
         <Button label="Not now" variant="ghost" onPress={onSkip} style={{ marginTop: spacing.sm }} />
       </View>
     </ScreenContainer>

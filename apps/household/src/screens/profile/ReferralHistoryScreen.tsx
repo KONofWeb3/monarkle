@@ -1,48 +1,70 @@
-import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import Header from '../../components/Header';
 import { colors, radius, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
+import { fetchReferrals } from '../../lib/householdApi';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ReferralHistory'>;
+type Referral = { id: string; fullName: string; createdAt: string };
 
-const referrals = [
-  { name: 'Adaeze O.', date: 'Jun 12, 2026', points: 100, status: 'Joined' },
-  { name: 'Biodun A.', date: 'Jun 5, 2026', points: 100, status: 'Pending' },
-  { name: 'Team B.', date: 'May 20, 2026', points: 100, status: 'Joined' },
-];
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 export default function ReferralHistoryScreen({}: Props) {
+  const [referrals, setReferrals] = useState<Referral[] | null>(null);
+
+  useEffect(() => {
+    fetchReferrals()
+      .then((res) => setReferrals(res.referrals))
+      .catch(() => setReferrals([]));
+  }, []);
+
+  if (referrals === null) {
+    return (
+      <ScreenContainer>
+        <Header title="Referral History" />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+      </ScreenContainer>
+    );
+  }
+
+  const totalPoints = referrals.length * 100;
+
   return (
     <ScreenContainer padded={false}>
       <View style={{ paddingHorizontal: spacing.xl }}>
         <Header title="Referral History" />
         <View style={styles.statsRow}>
-          <Stat value="8" label="Invited" />
-          <Stat value="6" label="Joined" />
-          <Stat value="2" label="Pending" />
+          <Stat value={String(referrals.length)} label="Referred" />
+          <Stat value={String(totalPoints)} label="Points earned" />
         </View>
       </View>
       <FlatList
         data={referrals}
-        keyExtractor={(r) => r.name}
+        keyExtractor={(r) => r.id}
         contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl }}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="people-outline" size={36} color={colors.textSecondary} />
+            <Text style={styles.emptyTitle}>No referrals yet</Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.date}>{item.date}</Text>
+              <Text style={styles.name}>{item.fullName}</Text>
+              <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
             </View>
-            <Text style={[styles.status, item.status === 'Pending' && { color: colors.warning }]}>{item.status}</Text>
-            <Text style={styles.points}>+{item.points} pts</Text>
+            <Text style={styles.status}>Joined</Text>
+            <Text style={styles.points}>+100 pts</Text>
           </View>
         )}
       />
-      <View style={styles.footerBanner}>
-        <Text style={styles.footerText}>600 points earned from referrals</Text>
-      </View>
     </ScreenContainer>
   );
 }
@@ -66,6 +88,6 @@ const styles = StyleSheet.create({
   date: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   status: { ...typography.caption, color: colors.primary, marginRight: spacing.md },
   points: { ...typography.captionMedium, color: colors.textPrimary },
-  footerBanner: { alignItems: 'center', paddingBottom: spacing.xl },
-  footerText: { ...typography.captionMedium, color: colors.primary },
+  empty: { alignItems: 'center', paddingTop: spacing.xxxl * 2 },
+  emptyTitle: { ...typography.bodyMedium, color: colors.textPrimary, marginTop: spacing.md },
 });

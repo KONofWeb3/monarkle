@@ -26,7 +26,15 @@
     },
     "plugins": [
       "expo-font",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "MONARKLE uses your location to find your address when requesting a pickup."
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

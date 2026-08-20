@@ -9,20 +9,15 @@ const intentToApi: Record<PickupIntent, string> = {
 };
 
 // ---------- Auth ----------
-
-export async function sendOtp(phone: string) {
-  return api.post<{ sent: boolean; mock: boolean; hint?: string }>('/auth/otp/send', { phone });
-}
-
-export async function verifyOtp(phone: string, code: string) {
-  return api.post<{ verified: boolean }>('/auth/otp/verify', { phone, code });
-}
+// (OTP send/verify client calls were removed along with the in-app OTP step
+// — see ForgotPasswordScreen and CreateAccountScreen for why.)
 
 export async function register(input: {
   fullName: string;
   phone: string;
   email?: string;
   password: string;
+  referredBy?: string;
 }) {
   const res = await api.post<{ token: string; user: any }>('/auth/register', {
     ...input,
@@ -43,12 +38,10 @@ export async function fetchMe() {
   return mapUser(res.user);
 }
 
-export async function requestPasswordReset(phone: string) {
-  return sendOtp(phone);
-}
-
-export async function resetPassword(phone: string, newPassword: string) {
-  return api.post<{ reset: boolean }>('/auth/password/reset', { phone, newPassword });
+export async function deactivateAccount(password: string) {
+  const res = await api.post<{ deactivated: boolean }>('/auth/deactivate', { password });
+  await setToken(null);
+  return res.deactivated;
 }
 
 export async function logout() {
@@ -60,6 +53,24 @@ export async function logout() {
 export async function updateProfile(patch: { fullName?: string; phone?: string; accountType?: string }) {
   const res = await api.patch<{ user: any }>('/household/profile', patch);
   return mapUser(res.user);
+}
+
+export type NotificationPrefs = {
+  assigned: boolean;
+  completed: boolean;
+  wallet: boolean;
+  payout: boolean;
+  promotions: boolean;
+};
+
+export async function fetchNotificationPrefs() {
+  const res = await api.get<{ prefs: NotificationPrefs }>('/household/notification-prefs');
+  return res.prefs;
+}
+
+export async function updateNotificationPrefs(patch: Partial<NotificationPrefs>) {
+  const res = await api.patch<{ prefs: NotificationPrefs }>('/household/notification-prefs', patch);
+  return res.prefs;
 }
 
 export async function fetchReferrals() {

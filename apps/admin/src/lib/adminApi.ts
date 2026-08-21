@@ -105,6 +105,31 @@ export async function setUserStatus(id: string, status: PlatformUser['status']):
   await api.post(`/admin/users/${id}/status`, { status: backendStatus });
 }
 
+const ROLE_TO_BACKEND: Record<UserRole, string> = {
+  Household: 'HOUSEHOLD', PSP: 'PSP', Collector: 'COLLECTOR', Recycler: 'RECYCLER', Corporate: 'CORPORATE',
+};
+
+export type CreateUserInput = {
+  fullName: string;
+  phone?: string;
+  email?: string;
+  password: string;
+  role: UserRole | 'Admin';
+  city?: string;
+  vehicleType?: string;
+  plateNumber?: string;
+  licenseNumber?: string;
+};
+
+// Returns the plain password back once — the caller must show it to whoever
+// is creating the account, since it's hashed server-side from this point on
+// and there's no email/SMS delivery to send it automatically.
+export async function createUser(input: CreateUserInput): Promise<{ user: PlatformUser | null; password: string }> {
+  const backendRole = input.role === 'Admin' ? 'ADMIN' : ROLE_TO_BACKEND[input.role];
+  const res = await api.post<{ user: any; password: string }>('/admin/users', { ...input, role: backendRole });
+  return { user: adaptUser(res.user), password: res.password };
+}
+
 // --- Overview / ESG ----------------------------------------------------
 
 export type Kpi = { label: string; value: string; icon: 'recycle' | 'leaf' | 'users' | 'trending' };

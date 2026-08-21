@@ -72,6 +72,17 @@ authRouter.post(
         referralCode: data.role === 'HOUSEHOLD' ? generateReferralCode(data.fullName) : undefined,
         referredBy: referrer?.referralCode ?? undefined,
         wallet: { create: { balance: 0 } },
+        // Safety net: the PSP/Collector apps' Home/Profile screens assume
+        // these rows exist. The real onboarding path for those roles is
+        // POST /admin/users (which collects real vehicle/license info) --
+        // this just stops a direct /auth/register call for those roles
+        // from producing a half-broken account with "Not set" everywhere.
+        pspProfile: data.role === 'PSP'
+          ? { create: { vehicleType: 'Not set', plateNumber: 'Not set', verified: false } }
+          : undefined,
+        collectorProfile: data.role === 'COLLECTOR'
+          ? { create: { vehicleType: 'Not set', plateNumber: 'Not set', licenseNumber: 'Not set', verified: false } }
+          : undefined,
       },
     });
 

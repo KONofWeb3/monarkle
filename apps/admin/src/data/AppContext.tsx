@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import * as adminApi from '../lib/adminApi';
 import { getToken } from '../lib/api';
 import type { AdminPickup, CityBreakdown, MonthlyPoint, PlatformUser } from './types';
-import type { EsgMetric, Kpi } from '../lib/adminApi';
+import type { CreateUserInput, EsgMetric, Kpi } from '../lib/adminApi';
 
 type AppState = {
   isInitializing: boolean;
@@ -23,6 +23,7 @@ type AppActions = {
   signOut: () => void;
   clearAuthError: () => void;
   setUserStatus: (id: string, status: PlatformUser['status']) => Promise<void>;
+  createUser: (input: CreateUserInput) => Promise<{ password: string }>;
   refreshAll: () => Promise<void>;
 };
 
@@ -116,6 +117,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUserStatus: async (id, status) => {
       await adminApi.setUserStatus(id, status);
       setUsers((u) => u.map((x) => (x.id === id ? { ...x, status } : x)));
+    },
+
+    createUser: async (input) => {
+      const { user, password } = await adminApi.createUser(input);
+      if (user) setUsers((u) => [user, ...u]);
+      return { password };
     },
 
     refreshAll,

@@ -1,13 +1,97 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { AppError, asyncHandler } from '../lib/errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { generateReferralCode } from '../lib/codes.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireRole('ADMIN'));
 
 // ---------- Users ----------
+
+// Creates a fully working account in one step -- the PSP/Collector apps
+// deliberately have no in-app signup (see their LoginScreen copy: "Contact
+// MONARKLE Ops to onboard your fleet"), so this endpoint is the only real
+// onboarding path for those roles. It also creates the role-specific
+// profile row (PspProfile/CollectorProfile) the apps' Home/Profile screens
+// expect to exist -- a plain /auth/register call for these roles used to
+// leave that missing and would have crashed on first login.
+const createUserSchema = z.object({
+  fullName: z.string().min(2),
+  phone: z.string().min(7).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(6),
+  role: z.enum(['HOUSEHOLD', 'PSP', 'COLLECTOR', 'ADMIN', 'RECYCLER', 'CORPORATE']),
+  city: z.string().optional(),
+  // PSP + Collector
+  vehicleType: z.string().min(2).optional(),
+  plateNumber: z.string().min(2).optional(),
+  // Collector only
+  licenseNumber: z.string().min(2).optional(),
+}).refine((d) => d.phone || d.email, { message: 'phone or email is required' })
+  .refine((d) => d.role !== 'PSP' || (d.vehicleType && d.plateNumber), {
+    message: 'vehicleType and plateNumber are required for PSP accounts',
+    path: ['vehicleType'],
+  })
+  .refine((d) => d.role !== 'COLLECTOR' || (d.vehicleType && d.plateNumber && d.licenseNumber), {
+    message: 'vehicleType, plateNumber, and licenseNumber are required for Collector accounts',
+    path: ['licenseNumber'],
+  });
+
+adminRouter.post(
+  '/users',
+  asyncHandler(async (req, res) => {
+    const data = createUserSchema.parse(req.body);
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [
+          data.phone ? { phone: data.phone } : undefined,
+          data.email ? { email: data.email } : undefined,
+        ].filter(Boolean) as Array<{ phone: string } | { email: string }>,
+      },
+    });
+    if (existing) throw new AppError(409, 'An account with this phone or email already exists');
+
+    const passwordHash = await bcrypt.hash(data.password, 10);
+    const initials = data.fullName
+      .split(' ')
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
+    const user = await prisma.user.create({
+      data: {
+        fullName: data.fullName,
+        phone: data.phone,
+        email: data.email,
+        passwordHash,
+        role: data.role,
+        accountType: data.role === 'HOUSEHOLD' ? 'Household' : undefined,
+        city: data.city ?? 'Lagos',
+        avatarInitials: initials || 'U',
+        referralCode: data.role === 'HOUSEHOLD' ? generateReferralCode(data.fullName) : undefined,
+        wallet: data.role === 'HOUSEHOLD' ? { create: { balance: 0 } } : undefined,
+        pspProfile: data.role === 'PSP'
+          ? { create: { vehicleType: data.vehicleType!, plateNumber: data.plateNumber!, verified: true } }
+          : undefined,
+        collectorProfile: data.role === 'COLLECTOR'
+          ? { create: { vehicleType: data.vehicleType!, plateNumber: data.plateNumber!, licenseNumber: data.licenseNumber!, verified: true } }
+          : undefined,
+      },
+    });
+
+    const { passwordHash: _omit, ...safe } = user;
+    // Password is returned once, here only -- it's hashed from this point
+    // on and cannot be recovered. Whoever's creating the account needs to
+    // relay it to the new user directly (no email/SMS delivery exists yet).
+    res.status(201).json({ user: safe, password: data.password });
+  })
+);
 
 adminRouter.get(
   '/users',

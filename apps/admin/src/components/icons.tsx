@@ -142,3 +142,12 @@ export const Recycle = base(
 export const Sparkles = base(
   <path d="M9.94 2.81a1 1 0 0 1 1.87 0l1.06 2.83a3 3 0 0 0 1.79 1.79l2.83 1.06a1 1 0 0 1 0 1.87l-2.83 1.06a3 3 0 0 0-1.79 1.79l-1.06 2.83a1 1 0 0 1-1.87 0l-1.06-2.83a3 3 0 0 0-1.79-1.79L4.26 10.4a1 1 0 0 1 0-1.87l2.83-1.06a3 3 0 0 0 1.79-1.79Z" />
 );
+
+export const X = base(<path d="M18 6 6 18M6 6l12 12" />);
+
+export const Copy = base(
+  <>
+    <rect x="9" y="9" width="13" height="13" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </>
+);

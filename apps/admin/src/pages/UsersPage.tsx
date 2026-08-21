@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Search, ShieldCheck, ShieldOff } from '../components/icons';
+import { Plus, Search, ShieldCheck, ShieldOff } from '../components/icons';
 import StatusBadge from '../components/StatusBadge';
+import CreateUserModal from '../components/CreateUserModal';
 import { useAppState } from '../data/AppContext';
 import type { UserRole } from '../data/types';
 
@@ -17,6 +18,7 @@ export default function UsersPage() {
   const { users, setUserStatus } = useAppState();
   const [role, setRole] = useState<'all' | UserRole>('all');
   const [query, setQuery] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
@@ -28,10 +30,20 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-[--color-ink]">Users</h1>
-        <p className="mt-1 text-sm text-[--color-muted]">Households, PSPs, collectors, recyclers, and corporate accounts.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-[--color-ink]">Users</h1>
+          <p className="mt-1 text-sm text-[--color-muted]">Households, PSPs, collectors, recyclers, and corporate accounts.</p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-[--color-primary] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+        >
+          <Plus size={16} /> Create user
+        </button>
       </div>
+
+      {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">

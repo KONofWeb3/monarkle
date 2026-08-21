@@ -1,5 +1,5 @@
 // Web build — token lives in localStorage rather than AsyncStorage.
-export const API_BASE_URL = 'http://localhost:4000';
+export const API_BASE_URL = 'https://monarkle-production.up.railway.app';
 
 const TOKEN_KEY = 'monarkle_admin_token';
 

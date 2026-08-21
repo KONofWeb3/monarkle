@@ -42,6 +42,19 @@ function adaptRoute(raw: any): Route {
 
 // --- Auth --------------------------------------------------------------
 
+export async function register(input: {
+  fullName: string;
+  phone: string;
+  password: string;
+  vehicleType: string;
+  plateNumber: string;
+  licenseNumber: string;
+}): Promise<void> {
+  // No token is issued for a Collector signup -- the account lands PENDING
+  // and needs admin approval before it can log in.
+  await api.post('/auth/register', { ...input, role: 'COLLECTOR' });
+}
+
 export async function login(identifier: string, password: string): Promise<CollectorProfile> {
   const res = await api.post<{ token: string; user: any }>('/auth/login', { identifier, password });
   if (res.user.role !== 'COLLECTOR') {

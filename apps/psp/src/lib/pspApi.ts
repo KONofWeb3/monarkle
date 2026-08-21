@@ -44,6 +44,18 @@ function adaptPayout(raw: any): PayoutRecord {
 
 // --- Auth --------------------------------------------------------------
 
+export async function register(input: {
+  fullName: string;
+  phone: string;
+  password: string;
+  vehicleType: string;
+  plateNumber: string;
+}): Promise<void> {
+  // No token is issued for a PSP signup -- the account lands PENDING and
+  // needs admin approval before it can log in. Nothing to store here.
+  await api.post('/auth/register', { ...input, role: 'PSP' });
+}
+
 export async function login(identifier: string, password: string): Promise<PspProfile> {
   const res = await api.post<{ token: string; user: any }>('/auth/login', { identifier, password });
   if (res.user.role !== 'PSP') {

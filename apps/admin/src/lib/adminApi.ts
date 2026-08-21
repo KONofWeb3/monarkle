@@ -86,6 +86,10 @@ export function logout() {
   setToken(null);
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await api.post('/auth/change-password', { currentPassword, newPassword });
+}
+
 // --- Pickups -------------------------------------------------------------
 
 export async function fetchPickups(): Promise<AdminPickup[]> {

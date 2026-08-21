@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { colors, spacing, typography } from '../../theme';
 import { useAppState } from '../../data/AppContext';
+import { AuthStackParamList } from '../../navigation/types';
 
-export default function LoginScreen() {
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+
+export default function LoginScreen({ navigation }: Props) {
   const { signIn, busy, authError, clearAuthError } = useAppState();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -51,7 +55,11 @@ export default function LoginScreen() {
 
       <Button label="Log In" loading={busy} disabled={!phone || !password} onPress={onLogin} style={{ marginTop: spacing.md }} />
 
-      <Text style={styles.footerText}>Not registered as a collector? Contact MONARKLE Ops.</Text>
+      <Pressable style={styles.footerRow} onPress={() => navigation.navigate('CreateAccount')}>
+        <Text style={styles.footerText}>
+          New collector? <Text style={styles.footerLink}>Apply to join</Text>
+        </Text>
+      </Pressable>
     </ScreenContainer>
   );
 }
@@ -64,5 +72,7 @@ const styles = StyleSheet.create({
   title: { ...typography.h2, color: colors.textPrimary, marginBottom: spacing.xs },
   subtitle: { ...typography.body, color: colors.textBody, marginBottom: spacing.xl },
   error: { ...typography.caption, color: colors.danger, marginBottom: spacing.md },
-  footerText: { ...typography.caption, color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
+  footerRow: { marginTop: spacing.xl, alignItems: 'center' },
+  footerText: { ...typography.caption, color: colors.textSecondary, textAlign: 'center' },
+  footerLink: { color: colors.primary, fontFamily: typography.captionMedium.fontFamily },
 });

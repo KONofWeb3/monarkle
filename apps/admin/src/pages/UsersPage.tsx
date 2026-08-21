@@ -98,7 +98,22 @@ export default function UsersPage() {
                 <td className="px-5 py-3.5 text-(--color-body)">{u.totalPickups}</td>
                 <td className="px-5 py-3.5"><StatusBadge status={u.status} /></td>
                 <td className="px-5 py-3.5 text-right">
-                  {u.status === 'suspended' ? (
+                  {u.status === 'pending' ? (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => { setUserStatus(u.id, 'active').catch(() => {}); }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-2.5 py-1.5 text-xs font-medium text-(--color-primary) hover:bg-(--color-primary-light)"
+                      >
+                        <ShieldCheck size={13} /> Approve
+                      </button>
+                      <button
+                        onClick={() => { setUserStatus(u.id, 'suspended').catch(() => {}); }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-2.5 py-1.5 text-xs font-medium text-(--color-danger) hover:bg-(--color-danger-bg)"
+                      >
+                        <ShieldOff size={13} /> Reject
+                      </button>
+                    </div>
+                  ) : u.status === 'suspended' ? (
                     <button
                       onClick={() => { setUserStatus(u.id, 'active').catch(() => {}); }}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-2.5 py-1.5 text-xs font-medium text-(--color-primary) hover:bg-(--color-primary-light)"

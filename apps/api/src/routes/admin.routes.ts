@@ -232,32 +232,3 @@ adminRouter.get(
     });
   })
 );
-
-// TEMPORARY one-time cleanup endpoint -- removes a fixed, explicit list of
-// confirmed seed/test accounts (and their dependent records) ahead of real
-// use. Not a general-purpose delete-user API. Remove this route once run.
-adminRouter.post(
-  '/_cleanup_seed_data',
-  asyncHandler(async (req, res) => {
-    const idsToDelete: string[] = req.body?.ids ?? [];
-    if (!Array.isArray(idsToDelete) || idsToDelete.length === 0) {
-      throw new AppError(400, 'ids array is required');
-    }
-
-    const routes = await prisma.route.findMany({ where: { collectorId: { in: idsToDelete } }, select: { id: true } });
-    const routeIds = routes.map((r) => r.id);
-    const stops = await prisma.stop.deleteMany({ where: { routeId: { in: routeIds } } });
-    const routesDeleted = await prisma.route.deleteMany({ where: { id: { in: routeIds } } });
-    const payouts = await prisma.payout.deleteMany({ where: { userId: { in: idsToDelete } } });
-    const pickups = await prisma.pickup.deleteMany({
-      where: { OR: [{ householdId: { in: idsToDelete } }, { pspId: { in: idsToDelete } }, { collectorId: { in: idsToDelete } }] },
-    });
-    const rewards = await prisma.rewardEntry.deleteMany({ where: { userId: { in: idsToDelete } } });
-    const users = await prisma.user.deleteMany({ where: { id: { in: idsToDelete } } });
-
-    res.json({
-      stops: stops.count, routes: routesDeleted.count, payouts: payouts.count,
-      pickups: pickups.count, rewards: rewards.count, users: users.count,
-    });
-  })
-);

@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, FileBarChart, Leaf, LogOut } from './icons';
+import { LayoutDashboard, Package, Users, FileBarChart, Leaf, LogOut, Key } from './icons';
 import { useAppState } from '../data/AppContext';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const links = [
   { to: '/', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -11,6 +13,7 @@ const links = [
 
 export default function Sidebar() {
   const { signOut, adminName } = useAppState();
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface)">
@@ -54,6 +57,13 @@ export default function Sidebar() {
             <p className="text-xs text-(--color-muted)">Operations</p>
           </div>
           <button
+            onClick={() => setShowChangePassword(true)}
+            className="rounded-md p-2 text-(--color-muted) hover:bg-(--color-bg) hover:text-(--color-ink)"
+            title="Change password"
+          >
+            <Key size={16} />
+          </button>
+          <button
             onClick={signOut}
             className="rounded-md p-2 text-(--color-muted) hover:bg-(--color-danger-bg) hover:text-(--color-danger)"
             title="Log out"
@@ -62,6 +72,8 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
     </aside>
   );
 }

@@ -22,7 +22,19 @@ const registerSchema = z.object({
   accountType: z.enum(['Household', 'Business', 'Estate', 'School', 'Market']).optional(),
   city: z.string().optional(),
   referredBy: z.string().trim().toUpperCase().optional(),
-}).refine((d) => d.phone || d.email, { message: 'phone or email is required' });
+  // PSP + Collector self-signup
+  vehicleType: z.string().min(2).optional(),
+  plateNumber: z.string().min(2).optional(),
+  licenseNumber: z.string().min(2).optional(), // Collector only
+}).refine((d) => d.phone || d.email, { message: 'phone or email is required' })
+  .refine((d) => d.role !== 'PSP' || (d.vehicleType && d.plateNumber), {
+    message: 'vehicleType and plateNumber are required for PSP accounts',
+    path: ['vehicleType'],
+  })
+  .refine((d) => d.role !== 'COLLECTOR' || (d.vehicleType && d.plateNumber && d.licenseNumber), {
+    message: 'vehicleType, plateNumber, and licenseNumber are required for Collector accounts',
+    path: ['licenseNumber'],
+  });
 
 authRouter.post(
   '/register',
@@ -59,6 +71,12 @@ authRouter.post(
       .join('')
       .toUpperCase();
 
+    // PSP/Collector self-signup lands PENDING -- they can't log in (see
+    // /login below) until an admin approves them from the dashboard. This
+    // is the vetting gate that makes self-service onboarding safe: anyone
+    // can submit an application, nobody can start receiving jobs unvetted.
+    const isFleetRole = data.role === 'PSP' || data.role === 'COLLECTOR';
+
     const user = await prisma.user.create({
       data: {
         fullName: data.fullName,
@@ -69,19 +87,15 @@ authRouter.post(
         accountType: data.accountType ?? (data.role === 'HOUSEHOLD' ? 'Household' : undefined),
         city: data.city ?? 'Lagos',
         avatarInitials: initials || 'U',
+        status: isFleetRole ? 'PENDING' : 'ACTIVE',
         referralCode: data.role === 'HOUSEHOLD' ? generateReferralCode(data.fullName) : undefined,
         referredBy: referrer?.referralCode ?? undefined,
         wallet: { create: { balance: 0 } },
-        // Safety net: the PSP/Collector apps' Home/Profile screens assume
-        // these rows exist. The real onboarding path for those roles is
-        // POST /admin/users (which collects real vehicle/license info) --
-        // this just stops a direct /auth/register call for those roles
-        // from producing a half-broken account with "Not set" everywhere.
         pspProfile: data.role === 'PSP'
-          ? { create: { vehicleType: 'Not set', plateNumber: 'Not set', verified: false } }
+          ? { create: { vehicleType: data.vehicleType!, plateNumber: data.plateNumber!, verified: false } }
           : undefined,
         collectorProfile: data.role === 'COLLECTOR'
-          ? { create: { vehicleType: 'Not set', plateNumber: 'Not set', licenseNumber: 'Not set', verified: false } }
+          ? { create: { vehicleType: data.vehicleType!, plateNumber: data.plateNumber!, licenseNumber: data.licenseNumber!, verified: false } }
           : undefined,
       },
     });
@@ -98,6 +112,16 @@ authRouter.post(
           data: { userId: user.id, label: 'Welcome bonus — referred by a friend', points: 50 },
         }),
       ]);
+    }
+
+    // PENDING accounts don't get a usable session token -- requireAuth only
+    // checks the JWT signature, not live status, so issuing one here would
+    // let a fleet applicant bypass the approval gate entirely. They log in
+    // normally once approved; POST /login rejects PENDING with a clear
+    // message in the meantime.
+    if (isFleetRole) {
+      res.status(201).json({ pending: true, user: serializeUser(user) });
+      return;
     }
 
     const token = signToken({ userId: user.id, role: user.role });
@@ -120,6 +144,7 @@ authRouter.post(
     if (!user) throw new AppError(401, 'Invalid credentials');
     if (user.status === 'SUSPENDED') throw new AppError(403, 'This account has been suspended');
     if (user.status === 'DELETED') throw new AppError(403, 'This account has been deleted');
+    if (user.status === 'PENDING') throw new AppError(403, "Your application is still pending approval — we'll notify you once it's reviewed.");
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new AppError(401, 'Invalid credentials');
@@ -181,6 +206,27 @@ authRouter.post(
     // same-day cascading delete.
     await prisma.user.update({ where: { id: user.id }, data: { status: 'DELETED' } });
     res.json({ deactivated: true });
+  })
+);
+
+authRouter.post(
+  '/change-password',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(6),
+    }).parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) throw new AppError(404, 'User not found');
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new AppError(401, 'Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    res.json({ changed: true });
   })
 );
 

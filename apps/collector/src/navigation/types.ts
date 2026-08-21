@@ -1,5 +1,7 @@
 export type AuthStackParamList = {
   Login: undefined;
+  CreateAccount: undefined;
+  ApplicationSubmitted: undefined;
 };
 
 export type HomeStackParamList = {

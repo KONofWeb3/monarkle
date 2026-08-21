@@ -32,12 +32,12 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-[--color-ink]">Users</h1>
-          <p className="mt-1 text-sm text-[--color-muted]">Households, PSPs, collectors, recyclers, and corporate accounts.</p>
+          <h1 className="font-display text-2xl font-bold text-(--color-ink)">Users</h1>
+          <p className="mt-1 text-sm text-(--color-muted)">Households, PSPs, collectors, recyclers, and corporate accounts.</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-[--color-primary] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-lg bg-(--color-primary) px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
         >
           <Plus size={16} /> Create user
         </button>
@@ -52,7 +52,7 @@ export default function UsersPage() {
               key={r.key}
               onClick={() => setRole(r.key)}
               className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                role === r.key ? 'bg-[--color-primary] text-white' : 'bg-[--color-surface] text-[--color-body] border border-[--color-border]'
+                role === r.key ? 'bg-(--color-primary) text-white' : 'bg-(--color-surface) text-(--color-body) border border-(--color-border)'
               }`}
             >
               {r.label}
@@ -60,20 +60,20 @@ export default function UsersPage() {
           ))}
         </div>
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[--color-muted]" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-muted)" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email..."
-            className="w-64 rounded-lg border border-[--color-border] bg-[--color-surface] py-2 pl-9 pr-3 text-sm outline-none focus:border-[--color-primary]"
+            className="w-64 rounded-lg border border-(--color-border) bg-(--color-surface) py-2 pl-9 pr-3 text-sm outline-none focus:border-(--color-primary)"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-[--color-border] bg-[--color-surface]">
+      <div className="overflow-x-auto rounded-2xl border border-(--color-border) bg-(--color-surface)">
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead>
-            <tr className="border-b border-[--color-border] text-xs uppercase tracking-wide text-[--color-muted]">
+            <tr className="border-b border-(--color-border) text-xs uppercase tracking-wide text-(--color-muted)">
               <th className="px-5 py-3 font-medium">Name</th>
               <th className="px-5 py-3 font-medium">Role</th>
               <th className="px-5 py-3 font-medium">Contact</th>
@@ -86,29 +86,29 @@ export default function UsersPage() {
           </thead>
           <tbody>
             {filtered.map((u) => (
-              <tr key={u.id} className="border-b border-[--color-border] last:border-0 hover:bg-[--color-bg]">
-                <td className="px-5 py-3.5 font-medium text-[--color-ink]">{u.name}</td>
-                <td className="px-5 py-3.5 text-[--color-body]">{u.role}</td>
-                <td className="px-5 py-3.5 text-[--color-body]">
+              <tr key={u.id} className="border-b border-(--color-border) last:border-0 hover:bg-(--color-bg)">
+                <td className="px-5 py-3.5 font-medium text-(--color-ink)">{u.name}</td>
+                <td className="px-5 py-3.5 text-(--color-body)">{u.role}</td>
+                <td className="px-5 py-3.5 text-(--color-body)">
                   <div>{u.email}</div>
-                  <div className="text-xs text-[--color-muted]">{u.phone}</div>
+                  <div className="text-xs text-(--color-muted)">{u.phone}</div>
                 </td>
-                <td className="px-5 py-3.5 text-[--color-body]">{u.city}</td>
-                <td className="px-5 py-3.5 text-[--color-body]">{u.joined}</td>
-                <td className="px-5 py-3.5 text-[--color-body]">{u.totalPickups}</td>
+                <td className="px-5 py-3.5 text-(--color-body)">{u.city}</td>
+                <td className="px-5 py-3.5 text-(--color-body)">{u.joined}</td>
+                <td className="px-5 py-3.5 text-(--color-body)">{u.totalPickups}</td>
                 <td className="px-5 py-3.5"><StatusBadge status={u.status} /></td>
                 <td className="px-5 py-3.5 text-right">
                   {u.status === 'suspended' ? (
                     <button
                       onClick={() => { setUserStatus(u.id, 'active').catch(() => {}); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] px-2.5 py-1.5 text-xs font-medium text-[--color-primary] hover:bg-[--color-primary-light]"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-2.5 py-1.5 text-xs font-medium text-(--color-primary) hover:bg-(--color-primary-light)"
                     >
                       <ShieldCheck size={13} /> Reinstate
                     </button>
                   ) : (
                     <button
                       onClick={() => { setUserStatus(u.id, 'suspended').catch(() => {}); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[--color-border] px-2.5 py-1.5 text-xs font-medium text-[--color-danger] hover:bg-[--color-danger-bg]"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-2.5 py-1.5 text-xs font-medium text-(--color-danger) hover:bg-(--color-danger-bg)"
                     >
                       <ShieldOff size={13} /> Suspend
                     </button>
@@ -118,7 +118,7 @@ export default function UsersPage() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-5 py-10 text-center text-[--color-muted]">No users match your filters.</td>
+                <td colSpan={8} className="px-5 py-10 text-center text-(--color-muted)">No users match your filters.</td>
               </tr>
             )}
           </tbody>

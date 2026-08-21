@@ -3,7 +3,7 @@ import Sidebar from './Sidebar';
 
 export default function DashboardLayout() {
   return (
-    <div className="flex min-h-screen w-full bg-[--color-bg]">
+    <div className="flex min-h-screen w-full bg-(--color-bg)">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl px-8 py-8">

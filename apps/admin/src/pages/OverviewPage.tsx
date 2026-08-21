@@ -26,8 +26,8 @@ export default function OverviewPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold text-[--color-ink]">Overview</h1>
-        <p className="mt-1 text-sm text-[--color-muted]">Platform-wide activity and environmental impact.</p>
+        <h1 className="font-display text-2xl font-bold text-(--color-ink)">Overview</h1>
+        <p className="mt-1 text-sm text-(--color-muted)">Platform-wide activity and environmental impact.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -37,8 +37,8 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-6 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-[--color-ink]">Waste collected by category (tonnes)</h2>
+        <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 lg:col-span-2">
+          <h2 className="mb-4 text-sm font-semibold text-(--color-ink)">Waste collected by category (tonnes)</h2>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={monthlyTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e7e9e8" vertical={false} />
@@ -54,8 +54,8 @@ export default function OverviewPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-6">
-          <h2 className="mb-4 text-sm font-semibold text-[--color-ink]">Impact by city</h2>
+        <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">
+          <h2 className="mb-4 text-sm font-semibold text-(--color-ink)">Impact by city</h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={cityBreakdown} layout="vertical" margin={{ left: 12 }}>
               <XAxis type="number" hide />
@@ -67,14 +67,14 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-6">
+      <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[--color-ink]">Recent pickups</h2>
-          <a href="/pickups" className="text-sm font-medium text-[--color-primary]">View all →</a>
+          <h2 className="text-sm font-semibold text-(--color-ink)">Recent pickups</h2>
+          <a href="/pickups" className="text-sm font-medium text-(--color-primary)">View all →</a>
         </div>
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-[--color-border] text-xs uppercase tracking-wide text-[--color-muted]">
+            <tr className="border-b border-(--color-border) text-xs uppercase tracking-wide text-(--color-muted)">
               <th className="pb-3 font-medium">Code</th>
               <th className="pb-3 font-medium">Household</th>
               <th className="pb-3 font-medium">Category</th>
@@ -85,13 +85,13 @@ export default function OverviewPage() {
           </thead>
           <tbody>
             {recent.map((p) => (
-              <tr key={p.id} className="border-b border-[--color-border] last:border-0">
-                <td className="py-3 font-medium text-[--color-ink]">{p.code}</td>
-                <td className="py-3 text-[--color-body]">{p.household}</td>
-                <td className="py-3 text-[--color-body]">{p.category}</td>
-                <td className="py-3 text-[--color-body]">{p.city}</td>
+              <tr key={p.id} className="border-b border-(--color-border) last:border-0">
+                <td className="py-3 font-medium text-(--color-ink)">{p.code}</td>
+                <td className="py-3 text-(--color-body)">{p.household}</td>
+                <td className="py-3 text-(--color-body)">{p.category}</td>
+                <td className="py-3 text-(--color-body)">{p.city}</td>
                 <td className="py-3"><StatusBadge status={statusMap[p.status]} /></td>
-                <td className="py-3 text-right font-medium text-[--color-ink]">₦{p.value.toLocaleString()}</td>
+                <td className="py-3 text-right font-medium text-(--color-ink)">₦{p.value.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

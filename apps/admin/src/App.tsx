@@ -11,7 +11,7 @@ function Gate() {
   const { isAuthenticated, isInitializing } = useAppState();
 
   if (isInitializing) {
-    return <div className="min-h-screen bg-[--color-bg]" />;
+    return <div className="min-h-screen bg-(--color-bg)" />;
   }
 
   if (!isAuthenticated) {
